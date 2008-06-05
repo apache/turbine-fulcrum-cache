@@ -24,62 +24,50 @@ import net.sf.ehcache.CacheManager;
 
 import org.apache.avalon.framework.activity.Disposable;
 import org.apache.avalon.framework.activity.Initializable;
-import org.apache.avalon.framework.service.ServiceException;
-import org.apache.avalon.framework.service.ServiceManager;
-import org.apache.avalon.framework.service.Serviceable;
+import org.apache.avalon.framework.logger.AbstractLogEnabled;
 import org.apache.avalon.framework.thread.ThreadSafe;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.fulcrum.cache.EHCacheService;
 
 /**
  * Default implementation of EHCacheService
- *
+ * 
  * @author <a href="mailto:epughNOSPAM@opensourceconnections.com">Eric Pugh </a>
- *
+ * 
  */
-public class DefaultEHCacheService implements EHCacheService, Serviceable, Disposable, Initializable,
-        ThreadSafe {
-
-    protected Log logger = LogFactory.getLog(DefaultEHCacheService.class.getName());
+public class DefaultEHCacheService extends AbstractLogEnabled 
+    implements EHCacheService, Disposable, Initializable, ThreadSafe
+{
 
     private CacheManager cacheManager;
 
-    public CacheManager getCacheManager(){
-    		return cacheManager;
+    public CacheManager getCacheManager()
+    {
+        return cacheManager;
     }
 
-    public Cache getCache(String cacheName){
-    		return cacheManager.getCache(cacheName);
-    }
-
-
-    /**
-     * @see org.apache.avalon.framework.component.Composable#compose(org.apache.avalon.framework.component.ComponentManager)
-     */
-    public void service(ServiceManager manager) throws ServiceException {
-
-
+    public Cache getCache(String cacheName)
+    {
+        return cacheManager.getCache(cacheName);
     }
 
     /**
      * @see org.apache.avalon.framework.activity.Initializable#initialize()
      */
-    public void initialize() throws Exception {
+    public void initialize() throws Exception
+    {
 
         cacheManager = CacheManager.create();
-        logger.debug("EHCacheService started!");
+        getLogger().debug("EHCacheService started!");
     }
 
     /**
      * @see org.apache.avalon.framework.activity.Disposable#dispose()
      */
-    public void dispose() {
-    		cacheManager.shutdown();
-    		cacheManager = null;
-    	    logger.debug("EHCacheService stopped!");
+    public void dispose()
+    {
+        cacheManager.shutdown();
+        cacheManager = null;
+        getLogger().debug("EHCacheService stopped!");
 
     }
-
-
 }

@@ -21,7 +21,7 @@
   <extend>${basedir}/../project.xml</extend>
   <id>fulcrum-cache</id>
   <name>Fulcrum Cache Component</name>
-  <currentVersion>1.1-dev</currentVersion>
+  <currentVersion>1.1</currentVersion>
   <versions>
     <version>
       <id>1.0.5</id>
@@ -35,13 +35,6 @@
       <artifactId>commons-collections</artifactId>
       <version>3.1</version>
       <url>http://commons.apache.org/collections/</url>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.1</version>
-      <url>http://commons.apache.org/lang/</url>
     </dependency>
 
     <dependency>
