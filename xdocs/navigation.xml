@@ -28,15 +28,17 @@
 
   <body>
 
-&site-nav;
+    &site-nav;
 
     <menu name="Overview">
-      <item name="Main"                 href="/index.html"/>
+      <item name="Main" href="/index.html"/>
     </menu>
 
     <menu name="Links">
       <item name="EHCache"
             href="http://ehcache.sourceforge.net/"/>
+      <item name="JCS"
+            href="http://jakarta.apache.org/jcs/"/>
     </menu>
 
   </body>

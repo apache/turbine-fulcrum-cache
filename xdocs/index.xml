@@ -30,6 +30,16 @@
 
   <section name="Overview">
     <p>
+      This Service functions as a Global Cache.  A global cache is a good
+      place to store items that you may need to access often but don't
+      necessarily need (or want) to fetch from the database everytime.  A
+      good example would be a look up table of States that you store in a
+      database and use throughout your application. Since information
+      about States doesn't change very often, you could store this
+      information in the Global Cache and decrease the overhead of
+      hitting the database everytime you need State information.
+    </p>
+    <p>
       There are three cache implementations
       <ul>
       	<li>GlobalCacheService,</li>
@@ -39,75 +49,50 @@
       		which was originally a part of Turbine)</li>
       </ul>
     </p>
+    <p>
+      It is written for use in Turbine but it can be used in any container 
+      compatible with Avalon's ECM container.
+    </p>
   </section>
   <section name="GlobalCacheService" id="GlobalCacheService">
-    <p>
-     This Service functions as a Global Cache.  A global cache is a good
-     place to store items that you may need to access often but don't
-     necessarily need (or want) to fetch from the database everytime.  A
-     good example would be a look up table of States that you store in a
-     database and use throughout your application. Since information
-     about States doesn't change very often, you could store this
-     information in the Global Cache and decrease the overhead of
-     hitting the database everytime you need State information.
-    </p>
-
-    <p>
-      It is written
-      for use in Turbine but it can be used in any container compatible
-      with Avalon's ECM container.
-    </p>
-
     <p>
       First, here is the role configuration.
     </p>
 
-    <source>
-    <![CDATA[
-        <role
-            name="org.apache.fulcrum.cache.GlobalCacheService"
-            shorthand="cache"
-            default-class="org.apache.fulcrum.cache.DefaultGlobalCacheService"/>
-    ]]>
-    </source>
+    <source><![CDATA[
+    <role
+        name="org.apache.fulcrum.cache.GlobalCacheService"
+        shorthand="cache"
+        default-class="org.apache.fulcrum.cache.DefaultGlobalCacheService"/>
+    ]]></source>
 
       <p>
         And here is the configuration:
       </p>
-    <source>
-
-    <![CDATA[
-        <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
-    ]]>
-    </source>
+    <source><![CDATA[
+    <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
+    ]]></source>
   </section>
 
   <section name="EHCacheService" id="EHCacheService">
 
     <p>
-      First, here is the role configuration.
+      The role configuration looks very similar.
     </p>
 
-    <source>
-    <![CDATA[
-        <role
-            name="org.apache.fulcrum.cache.EHCacheService"
-            shorthand="ehcache"
-            default-class="org.apache.fulcrum.cache.impl.DefaultEHCacheService"/>
-    ]]>
-    </source>
+    <source><![CDATA[
+    <role
+        name="org.apache.fulcrum.cache.EHCacheService"
+        shorthand="ehcache"
+        default-class="org.apache.fulcrum.cache.impl.DefaultEHCacheService"/>
+    ]]></source>
 
-      <p>
-        And here is the configuration:
-      </p>
-    <source>
-
-    <![CDATA[
- <ehcache>
-
-    </ehcache>
-    ]]>
-    </source>
+    <p>
+      There is nothing to configure for the component.
+    </p>
+    <source><![CDATA[
+    <ehcache />
+    ]]></source>
 
   </section>
 
@@ -120,31 +105,27 @@
 	  caches for example.
 	</p>
     <p>
-      First, here is the role configuration.
+      The role configuration only differs from the <code>GlobalCacheService</code> in the 
+      <code>default-class</code>.
     </p>
 
-    <source>
-    <![CDATA[
-        <role
-            name="org.apache.fulcrum.cache.GlobalCacheService"
-            shorthand="jcscache"
-            default-class="org.apache.fulcrum.cache.impl.JCSCacheService"/>
-    ]]>
-    </source>
+    <source><![CDATA[
+    <role
+        name="org.apache.fulcrum.cache.GlobalCacheService"
+        shorthand="jcscache"
+        default-class="org.apache.fulcrum.cache.impl.JCSCacheService"/>
+    ]]></source>
 
-      <p>
-        And here is the configuration:
-      </p>
-    <source>
-
-    <![CDATA[
-        <jcscache>
-	    	<cacheCheckFrequency>5000</cacheCheckFrequency>
-        	<region>fulcrum</region>
-        	<configurationFile>/cache.ccf</configurationFile>
-        </jcscache>
-    ]]>
-    </source>
+    <p>
+      And here is the configuration:
+    </p>
+    <source><![CDATA[
+    <jcscache>
+    	<cacheCheckFrequency>5000</cacheCheckFrequency>
+    	<region>fulcrum</region>
+    	<configurationFile>/cache.ccf</configurationFile>
+    </jcscache>
+    ]]></source>
     <p>
       The region parameter is the name of the cache region to use when caching objects. It defaults to
       <code>fulcrum</code>. JCS will store the objects in a group named <code>default_group</code> in that
@@ -159,7 +140,6 @@
   <section name="Usage">
 
     <source><![CDATA[
-
     GlobalCacheService gs = null;
     try
     {
@@ -187,17 +167,22 @@
             " Refreshed/or added new item to" +
             " the cache! Expires in 5 seconds" );
     }
-
     ]]></source>
 
     <p>
-    You can also place an expiration time on your objects so the Service will
-    automatically remove them when they expire. If you don't specify an expiration
-    time, the DefaultGlobalCacheService uses 5 seconds. For JCS this value depends on values set
-    in the cache configuration file. To see an example, look at the
-    test case <a href="xref-test/org/apache/fulcrum/cache/CacheTest.html">CacheTest</a>
+      You can also place an expiration time on your objects so the Service will
+      automatically remove them when they expire. If you don't specify an expiration
+      time, the DefaultGlobalCacheService uses 5 seconds. For JCS this value depends on values set
+      in the cache configuration file. To see an example, look at the
+      test case <a href="xref-test/org/apache/fulcrum/cache/CacheTest.html">CacheTest</a>
     </p>
 
+    <p>
+      The cache also supports <code>RefreshableCachedObject</code>s. These objects must implement
+      a <code>refresh()</code>-method which will be called every time the cache detects that the
+      object is expired. This way, you can keep objects in the cache that "auto-refresh" 
+      asynchronuously. 
+    </p>
   </section>
 
 </body>
