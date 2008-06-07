@@ -28,6 +28,11 @@
       <name>1.0.5</name>
       <tag>FULCRUM_CACHE_1_0_5</tag>
     </version>
+    <version>
+      <id>1.1</id>
+      <name>1.1</name>
+      <tag>FULCRUM_CACHE_1_1</tag>
+    </version>
   </versions>
   <dependencies>
     <dependency>
