@@ -83,6 +83,10 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <defaultGoal>jar:jar</defaultGoal>
+  </build>
+  
   <!-- override reports to avoid jcoverage plugin -->
   <reports>
     <report>maven-jdepend-plugin</report>
