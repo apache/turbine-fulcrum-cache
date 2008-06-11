@@ -25,6 +25,12 @@
 
   <body>
     <release version="1.1" date="in Subversion">
+      <action type="update" dev="sgoeschl">
+        Improved maven-1.1 build (default goal now in project.xml)
+      </action>
+      <action type="add" dev="sgoeschl">
+        Added M2 build but it is still a bit rough
+      </action>
       <action type="update" dev="seade" issue="TRB-17" due-to="Thomas Vandahl">
         Added new JCSCacheService.  Thanks to Thomas Vandahl.
       </action>
