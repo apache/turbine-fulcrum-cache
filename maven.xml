@@ -17,11 +17,7 @@
  specific language governing permissions and limitations
  under the License.
 -->
-<project default="jar:jar" xmlns:maven="jelly:maven" xmlns:j="jelly:core" xmlns:util="jelly:util" xmlns:ant="jelly:ant">
-
-  <preGoal name="site">
-    <attainGoal name="maven-jcoverage-plugin:deregister"/>
-  </preGoal>
+<project xmlns:maven="jelly:maven" xmlns:j="jelly:core" xmlns:util="jelly:util" xmlns:ant="jelly:ant">
 
   <preGoal name="test:test">
     <ant:copy todir="${maven.test.dest}">
