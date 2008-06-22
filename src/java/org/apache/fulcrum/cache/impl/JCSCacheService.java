@@ -45,18 +45,17 @@ import org.apache.jcs.engine.ElementAttributes;
 
 /**
  * Default implementation of JCSCacheService
- *
+ * 
  * @author <a href="mailto:tv@apache.org">Thomas Vandahl</a>
  * @version $Id:$
  */
-public class JCSCacheService
-    extends AbstractLogEnabled
-    implements GlobalCacheService, Runnable, Configurable, Disposable, Initializable, ThreadSafe
+public class JCSCacheService extends AbstractLogEnabled implements
+        GlobalCacheService, Runnable, Configurable, Disposable, Initializable,
+        ThreadSafe
 {
     /**
-     * Cache check frequency in Millis (1000 Millis = 1 second).
-     * Value must be > 0.
-     * Default = 5 seconds
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be >
+     * 0. Default = 5 seconds
      */
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
 
@@ -98,9 +97,11 @@ public class JCSCacheService
      */
     public void configure(Configuration config) throws ConfigurationException
     {
-        cacheCheckFrequency = config.getChild("cacheCheckFrequency").getValueAsLong(DEFAULT_CACHE_CHECK_FREQUENCY);
-        region = config.getChild("region").getValue("fulcrum");
-        configFile = config.getChild("configurationFile").getValue("/cache.ccf");
+        this.cacheCheckFrequency = config.getChild("cacheCheckFrequency")
+                .getValueAsLong(DEFAULT_CACHE_CHECK_FREQUENCY);
+        this.region = config.getChild("region").getValue("fulcrum");
+        this.configFile = config.getChild("configurationFile").getValue(
+                "/cache.ccf");
     }
 
     /**
@@ -108,20 +109,20 @@ public class JCSCacheService
      */
     public void initialize() throws Exception
     {
-        JCS.setConfigFilename(configFile);
-        cacheManager = JCS.getInstance(region);
+        JCS.setConfigFilename(this.configFile);
+        this.cacheManager = JCS.getInstance(this.region);
 
         // Start housekeeping thread.
-        continueThread = true;
-        refreshing = new Thread(this);
+        this.continueThread = true;
+        this.refreshing = new Thread(this);
 
         // Indicate that this is a system thread. JVM will quit only when
         // there are no more active user threads. Settings threads spawned
         // internally by Turbine as daemons allows commandline applications
         // using Turbine to terminate in an orderly manner.
-        refreshing.setDaemon(true);
-        refreshing.setName("JCSCacheService Refreshing");
-        refreshing.start();
+        this.refreshing.setDaemon(true);
+        this.refreshing.setName("JCSCacheService Refreshing");
+        this.refreshing.start();
 
         getLogger().debug("JCSCacheService started.");
     }
@@ -131,12 +132,12 @@ public class JCSCacheService
      */
     public void dispose()
     {
-        continueThread = false;
-        refreshing.interrupt();
+        this.continueThread = false;
+        this.refreshing.interrupt();
 
-        cacheManager.dispose();
-        cacheManager = null;
-        
+        this.cacheManager.dispose();
+        this.cacheManager = null;
+
         getLogger().debug("JCSCacheService stopped.");
     }
 
@@ -145,7 +146,8 @@ public class JCSCacheService
      */
     public CachedObject getObject(String id) throws ObjectExpiredException
     {
-        CachedObject obj = (CachedObject) cacheManager.getFromGroup(id, group);
+        CachedObject obj = (CachedObject) this.cacheManager.getFromGroup(id,
+                group);
 
         if (obj == null)
         {
@@ -193,7 +195,8 @@ public class JCSCacheService
     }
 
     /**
-     * @see org.apache.fulcrum.cache.GlobalCacheService#addObject(java.lang.String, org.apache.fulcrum.cache.CachedObject)
+     * @see org.apache.fulcrum.cache.GlobalCacheService#addObject(java.lang.String,
+     *      org.apache.fulcrum.cache.CachedObject)
      */
     public void addObject(String id, CachedObject o)
     {
@@ -201,10 +204,15 @@ public class JCSCacheService
         {
             if (!(o.getContents() instanceof Serializable))
             {
-                getLogger().warn("Object with id [" + id + "] is not serializable. Expect problems with auxiliary caches.");
+                getLogger()
+                        .warn(
+                                "Object with id ["
+                                        + id
+                                        + "] is not serializable. Expect problems with auxiliary caches.");
             }
 
-            ElementAttributes attrib = (ElementAttributes)cacheManager.getDefaultElementAttributes();
+            ElementAttributes attrib = (ElementAttributes) this.cacheManager
+                    .getDefaultElementAttributes();
 
             if (o instanceof RefreshableCachedObject)
             {
@@ -213,13 +221,13 @@ public class JCSCacheService
             else
             {
                 attrib.setIsEternal(false);
-                attrib.setMaxLifeSeconds((o.getExpires() + 500)/ 1000);
+                attrib.setMaxLifeSeconds((o.getExpires() + 500) / 1000);
             }
 
             attrib.setLastAccessTimeNow();
             attrib.setCreateTime();
 
-            cacheManager.putInGroup(id, group, o, attrib);
+            this.cacheManager.putInGroup(id, group, o, attrib);
         }
         catch (CacheException e)
         {
@@ -232,7 +240,7 @@ public class JCSCacheService
      */
     public void removeObject(String id)
     {
-        cacheManager.remove(id, group);
+        this.cacheManager.remove(id, group);
     }
 
     /**
@@ -242,7 +250,7 @@ public class JCSCacheService
     {
         ArrayList keys = new ArrayList();
 
-        keys.addAll(cacheManager.getGroupKeys(group));
+        keys.addAll(this.cacheManager.getGroupKeys(group));
         return keys;
     }
 
@@ -253,9 +261,10 @@ public class JCSCacheService
     {
         ArrayList values = new ArrayList();
 
-        for (Iterator i = cacheManager.getGroupKeys(group).iterator(); i.hasNext();)
+        for (Iterator i = this.cacheManager.getGroupKeys(group).iterator(); i
+                .hasNext();)
         {
-            Object o = cacheManager.getFromGroup(i.next(), group);
+            Object o = this.cacheManager.getFromGroup(i.next(), group);
             if (o != null)
             {
                 values.add(o);
@@ -266,28 +275,32 @@ public class JCSCacheService
     }
 
     /**
-     * Circle through the cache and refresh stale objects.  Frequency
-     * is determined by the cacheCheckFrequency property.
+     * Circle through the cache and refresh stale objects. Frequency is
+     * determined by the cacheCheckFrequency property.
      */
     public void run()
     {
-        while (continueThread)
+        while (this.continueThread)
         {
             // Sleep for amount of time set in cacheCheckFrequency -
             // default = 5 seconds.
             try
             {
-                Thread.sleep(cacheCheckFrequency);
+                Thread.sleep(this.cacheCheckFrequency);
             }
             catch (InterruptedException exc)
             {
-                if (!continueThread) return;
+                if (!this.continueThread)
+                {
+                    return;
+                }
             }
 
-            for (Iterator i = cacheManager.getGroupKeys(group).iterator(); i.hasNext();)
+            for (Iterator i = this.cacheManager.getGroupKeys(group).iterator(); i
+                    .hasNext();)
             {
-                String key= (String)i.next();
-                Object o = cacheManager.getFromGroup(key, group);
+                String key = (String) i.next();
+                Object o = this.cacheManager.getFromGroup(key, group);
                 if (o == null)
                 {
                     removeObject(key);
@@ -299,7 +312,7 @@ public class JCSCacheService
                         RefreshableCachedObject rco = (RefreshableCachedObject) o;
                         if (rco.isUntouched())
                         {
-                            cacheManager.remove(key, group);
+                            this.cacheManager.remove(key, group);
                         }
                         else if (rco.isStale())
                         {
@@ -319,11 +332,11 @@ public class JCSCacheService
         // This is evil!
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(baos);
-        Set keys = cacheManager.getGroupKeys(group);
+        Set keys = this.cacheManager.getGroupKeys(group);
 
         for (Iterator i = keys.iterator(); i.hasNext();)
         {
-            out.writeObject(cacheManager.getFromGroup(i.next(), group));
+            out.writeObject(this.cacheManager.getFromGroup(i.next(), group));
         }
 
         out.flush();
@@ -344,9 +357,10 @@ public class JCSCacheService
     {
         int count = 0;
 
-        for (Iterator i = cacheManager.getGroupKeys(group).iterator();  i.hasNext();)
+        for (Iterator i = this.cacheManager.getGroupKeys(group).iterator(); i
+                .hasNext();)
         {
-            if (cacheManager.getFromGroup(i.next(), group) != null)
+            if (this.cacheManager.getFromGroup(i.next(), group) != null)
             {
                 count++;
             }
@@ -360,6 +374,6 @@ public class JCSCacheService
      */
     public void flushCache()
     {
-        cacheManager.invalidateGroup(group);
+        this.cacheManager.invalidateGroup(group);
     }
 }

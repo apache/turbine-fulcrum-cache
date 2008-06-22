@@ -22,20 +22,21 @@ package org.apache.fulcrum.cache;
 import java.io.Serializable;
 
 /**
- * Wrapper for an object you want to store in a cache for a period of
- * time.
- *
- * @todo  The old Turbine version you could set the default age from Turbine.  What
- * we need is a CachedObjectFactory that would generate CachedObject's that could then
- * have their default age set.
+ * Wrapper for an object you want to store in a cache for a period of time.
+ * 
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
  * @author <a href="mailto:hps@intermeta.de">Henning P. Schmiedehausen</a>
  * @author <a href="mailto:epugh@upstate.com">Eric Pugh</a>
  * @version $Id$
  */
-public class CachedObject
-    implements Serializable
+
+public class CachedObject implements Serializable
 {
+    /*
+     * TODO: The old Turbine version you could set the default age from Turbine.
+     * What we need is a CachedObjectFactory that would generate CachedObject's
+     * that could then have their default age set.
+     */
 
     /**
      * Serialization key
@@ -54,42 +55,42 @@ public class CachedObject
     /** Default age (30 minutes). */
     private long defaultage = 1800000;
 
-    /** When created. **/
+    /** When created. * */
     protected long created = 0;
 
-    /** When it expires. **/
+    /** When it expires. * */
     private long expires = 0;
 
     /** Is this object stale/expired? */
     private boolean stale = false;
 
-
     /**
-     * Constructor; sets the object to expire in the default time (30
-     * minutes).
-     *
-     * @param o The object you want to cache.
+     * Constructor; sets the object to expire in the default time (30 minutes).
+     * 
+     * @param o
+     *            The object you want to cache.
      */
     public CachedObject(Object o)
     {
         this.contents = o;
-        this.expires = defaultage;
+        this.expires = this.defaultage;
         this.created = System.currentTimeMillis();
     }
 
     /**
      * Constructor.
-     *
-     * @param o The object to cache.
-     * @param expires How long before the object expires, in ms,
-     * e.g. 1000 = 1 second.
+     * 
+     * @param o
+     *            The object to cache.
+     * @param expires
+     *            How long before the object expires, in ms, e.g. 1000 = 1
+     *            second.
      */
-    public CachedObject(Object o,
-                        long expires)
+    public CachedObject(Object o, long expires)
     {
-        if ( expires == DEFAULT )
+        if (expires == DEFAULT)
         {
-            this.expires = defaultage;
+            this.expires = this.defaultage;
         }
 
         this.contents = o;
@@ -99,44 +100,45 @@ public class CachedObject
 
     /**
      * Returns the cached object.
-     *
+     * 
      * @return The cached object.
      */
     public Object getContents()
     {
-        return contents;
+        return this.contents;
     }
 
     /**
      * Returns the creation time for the object.
-     *
+     * 
      * @return When the object was created.
      */
     public long getCreated()
     {
-        return created;
+        return this.created;
     }
 
     /**
      * Returns the expiration time for the object.
-     *
+     * 
      * @return When the object expires.
      */
     public long getExpires()
     {
-        return expires;
+        return this.expires;
     }
 
     /**
      * Set the expiration interval for the object.
-     *
-     * @param expires Expiration interval in millis ( 1 second = 1000 millis)
+     * 
+     * @param expires
+     *            Expiration interval in millis ( 1 second = 1000 millis)
      */
     public void setExpires(long expires)
     {
         if (expires == DEFAULT)
         {
-            this.expires = defaultage;
+            this.expires = this.defaultage;
         }
         else
         {
@@ -148,43 +150,44 @@ public class CachedObject
         }
         else
         {
-            setStale((System.currentTimeMillis() - created) > expires);
+            setStale((System.currentTimeMillis() - this.created) > expires);
         }
     }
 
     /**
      * Set the stale status for the object.
-     *
-     * @param stale Whether the object is stale or not.
+     * 
+     * @param stale
+     *            Whether the object is stale or not.
      */
-    public synchronized void setStale ( boolean stale )
+    public synchronized void setStale(boolean stale)
     {
         this.stale = stale;
     }
 
     /**
      * Get the stale status for the object.
-     *
+     * 
      * @return Whether the object is stale or not.
      */
     public synchronized boolean getStale()
     {
-        return stale;
+        return this.stale;
     }
 
     /**
      * Is the object stale?
-     *
+     * 
      * @return True if the object is stale.
      */
     public synchronized boolean isStale()
     {
-        if(expires == FOREVER)
+        if (this.expires == FOREVER)
         {
             return false;
         }
 
-        setStale( (System.currentTimeMillis() - created) > expires );
+        setStale((System.currentTimeMillis() - this.created) > this.expires);
         return getStale();
     }
 }

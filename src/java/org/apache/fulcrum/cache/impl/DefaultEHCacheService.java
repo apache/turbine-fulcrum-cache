@@ -34,20 +34,20 @@ import org.apache.fulcrum.cache.EHCacheService;
  * @author <a href="mailto:epughNOSPAM@opensourceconnections.com">Eric Pugh </a>
  * 
  */
-public class DefaultEHCacheService extends AbstractLogEnabled 
-    implements EHCacheService, Disposable, Initializable, ThreadSafe
+public class DefaultEHCacheService extends AbstractLogEnabled implements
+        EHCacheService, Disposable, Initializable, ThreadSafe
 {
 
     private CacheManager cacheManager;
 
     public CacheManager getCacheManager()
     {
-        return cacheManager;
+        return this.cacheManager;
     }
 
     public Cache getCache(String cacheName)
     {
-        return cacheManager.getCache(cacheName);
+        return this.cacheManager.getCache(cacheName);
     }
 
     /**
@@ -56,7 +56,7 @@ public class DefaultEHCacheService extends AbstractLogEnabled
     public void initialize() throws Exception
     {
 
-        cacheManager = CacheManager.create();
+        this.cacheManager = CacheManager.create();
         getLogger().debug("EHCacheService started!");
     }
 
@@ -65,8 +65,8 @@ public class DefaultEHCacheService extends AbstractLogEnabled
      */
     public void dispose()
     {
-        cacheManager.shutdown();
-        cacheManager = null;
+        this.cacheManager.shutdown();
+        this.cacheManager = null;
         getLogger().debug("EHCacheService stopped!");
 
     }

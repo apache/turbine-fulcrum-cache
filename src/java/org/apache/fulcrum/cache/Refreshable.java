@@ -20,9 +20,9 @@ package org.apache.fulcrum.cache;
  */
 
 /**
- * This is the interface for objects you want to refresh themselves
- * from the cache.
- *
+ * This is the interface for objects you want to refresh themselves from the
+ * cache.
+ * 
  * @author <a href="mailto:nissim@nksystems.com">Nissim Karpenstein</a>
  * @version $Id$
  */

@@ -35,59 +35,62 @@ import org.apache.avalon.framework.configuration.Configuration;
 import org.apache.avalon.framework.configuration.ConfigurationException;
 import org.apache.avalon.framework.logger.AbstractLogEnabled;
 import org.apache.avalon.framework.thread.ThreadSafe;
+
 /**
- * This Service functions as a Global Cache.  A global cache is a good
- * place to store items that you may need to access often but don't
- * necessarily need (or want) to fetch from the database everytime.  A
- * good example would be a look up table of States that you store in a
- * database and use throughout your application.  Since information
- * about States doesn't change very often, you could store this
- * information in the Global Cache and decrease the overhead of
+ * This Service functions as a Global Cache. A global cache is a good place to
+ * store items that you may need to access often but don't necessarily need (or
+ * want) to fetch from the database everytime. A good example would be a look up
+ * table of States that you store in a database and use throughout your
+ * application. Since information about States doesn't change very often, you
+ * could store this information in the Global Cache and decrease the overhead of
  * hitting the database everytime you need State information.
- *
+ * 
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
  * @author <a href="mailto:jon@clearink.com">Jon S. Stevens</a>
  * @author <a href="mailto:john@zenplex.com">John Thorhauer</a>
  * @author <a href="mailto:hps@intermeta.de">Henning P. Schmiedehausen</a>
  * @author <a href="mailto:epugh@upstate.com">Eric Pugh</a>
  * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
- * * @version $Id$
+ * @version $Id$
  */
-public class DefaultGlobalCacheService
-    extends AbstractLogEnabled
-    implements GlobalCacheService, Runnable, Configurable, Initializable, Disposable, ThreadSafe
+public class DefaultGlobalCacheService extends AbstractLogEnabled implements
+        GlobalCacheService, Runnable, Configurable, Initializable, Disposable,
+        ThreadSafe
 {
     /**
-    	 * Initial size of hash table
-    	 * Value must be > 0.
-    	 * Default = 20
-    	 */
+     * Initial size of hash table Value must be > 0. Default = 20
+     */
     public static final int DEFAULT_INITIAL_CACHE_SIZE = 20;
+
     /**
-	* The property for the InitalCacheSize
-	*/
+     * The property for the InitalCacheSize
+     */
     public static final String INITIAL_CACHE_SIZE = "cacheInitialSize";
+
     /**
-	 * The property for the Cache check frequency
-	 */
+     * The property for the Cache check frequency
+     */
     public static final String CACHE_CHECK_FREQUENCY = "cacheCheckFrequency";
+
     /**
-	 * Cache check frequency in Millis (1000 Millis = 1 second).
-	 * Value must be > 0.
-	 * Default = 5 seconds
-	 */
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be >
+     * 0. Default = 5 seconds
+     */
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
-    /** The cache. **/
+
+    /** The cache. * */
     protected Hashtable cache = null;
+
     /**
      * cacheCheckFrequency (default - 5 seconds)
      */
     private long cacheCheckFrequency;
 
-	/**
-	 * cacheInitialSize (default - 20)
-	 */
-	private int cacheInitialSize;
+    /**
+     * cacheInitialSize (default - 20)
+     */
+    private int cacheInitialSize;
+
     /** thread for removing stale items from the cache */
     private Thread housekeeping;
 
@@ -95,31 +98,31 @@ public class DefaultGlobalCacheService
     private boolean continueThread;
 
     /**
-     * @return
+     * Get the Cache Check Frequency in milliseconds
+     * 
+     * @return the time between two cache check runs in milliseconds
      */
     public long getCacheCheckFrequency()
     {
-        return cacheCheckFrequency;
+        return this.cacheCheckFrequency;
     }
 
-    public DefaultGlobalCacheService()
-    {
-    }
     /**
-     * Returns an item from the cache.
-    /**
-     * Returns an item from the cache.  RefreshableCachedObject will be
-     * refreshed if it is expired and not untouched.
-     *
-     * @param id The key of the stored object.
+     * Returns an item from the cache. /** Returns an item from the cache.
+     * RefreshableCachedObject will be refreshed if it is expired and not
+     * untouched.
+     * 
+     * @param id
+     *            The key of the stored object.
      * @return The object from the cache.
-     * @exception ObjectExpiredException, when either the object is
-     * not in the cache or it has expired.
+     * @exception ObjectExpiredException,
+     *                when either the object is not in the cache or it has
+     *                expired.
      */
     public CachedObject getObject(String id) throws ObjectExpiredException
     {
         CachedObject obj = null;
-        obj = (CachedObject) cache.get(id);
+        obj = (CachedObject) this.cache.get(id);
         if (obj == null)
         {
             // Not in the cache.
@@ -130,12 +133,16 @@ public class DefaultGlobalCacheService
             if (obj instanceof RefreshableCachedObject)
             {
                 RefreshableCachedObject rco = (RefreshableCachedObject) obj;
-                if (rco.isUntouched()) // Do not refresh an object that has exceeded TimeToLive
+                if (rco.isUntouched())
+                {
                     throw new ObjectExpiredException();
+                }
                 // Refresh Object
                 rco.refresh();
-                if (rco.isStale()) // Object is Expired.
+                if (rco.isStale())
+                {
                     throw new ObjectExpiredException();
+                }
             }
             else
             {
@@ -151,107 +158,123 @@ public class DefaultGlobalCacheService
         }
         return obj;
     }
+
     /**
      * Adds an object to the cache.
-     *
-     * @param id The key to store the object by.
-     * @param o The object to cache.
+     * 
+     * @param id
+     *            The key to store the object by.
+     * @param o
+     *            The object to cache.
      */
     public void addObject(String id, CachedObject o)
     {
         // If the cache already contains the key, remove it and add
         // the fresh one.
-        if (cache.containsKey(id))
+        if (this.cache.containsKey(id))
         {
-            cache.remove(id);
+            this.cache.remove(id);
         }
-        cache.put(id, o);
+        this.cache.put(id, o);
     }
+
     /**
      * Removes an object from the cache.
-     *
-     * @param id The String id for the object.
+     * 
+     * @param id
+     *            The String id for the object.
      */
     public void removeObject(String id)
     {
-        cache.remove(id);
+        this.cache.remove(id);
     }
 
     /**
      * Returns a copy of keys to objects in the cache as a list.
-     *
+     * 
      * Note that keys to expired objects are not returned.
-     *
-     * @return A List of <code>String</code>'s representing the keys to objects
-     * in the cache.
+     * 
+     * @return A List of <code>String</code>'s representing the keys to
+     *         objects in the cache.
      */
-    public List getKeys() {
-        ArrayList keys = new ArrayList(cache.size());
-        synchronized (this) {
-            for (Iterator itr = cache.keySet().iterator(); itr.hasNext();)
+    public List getKeys()
+    {
+        ArrayList keys = new ArrayList(this.cache.size());
+        synchronized (this)
+        {
+            for (Iterator itr = this.cache.keySet().iterator(); itr.hasNext();)
             {
                 String key = (String) itr.next();
-                try {
-                    /* CachedObject obj = */ getObject(key);
-                } catch (ObjectExpiredException oee) {
+                try
+                {
+                    /* CachedObject obj = */getObject(key);
+                }
+                catch (ObjectExpiredException oee)
+                {
                     // this is OK we just do not want this key
                     continue;
                 }
                 keys.add(new String(key));
             }
         }
-        return (List)keys;
+        return keys;
     }
 
     /**
-     * Returns a copy of the non-expired CachedObjects
-     * in the cache as a list.
-     *
-     * @return A List of <code>CachedObject</code> objects
-     * held in the cache
+     * Returns a copy of the non-expired CachedObjects in the cache as a list.
+     * 
+     * @return A List of <code>CachedObject</code> objects held in the cache
      */
-    public List getCachedObjects() {
-        ArrayList objects = new ArrayList(cache.size());
-        synchronized (this) {
-            for (Iterator itr = cache.keySet().iterator(); itr.hasNext();)
+    public List getCachedObjects()
+    {
+        ArrayList objects = new ArrayList(this.cache.size());
+        synchronized (this)
+        {
+            for (Iterator itr = this.cache.keySet().iterator(); itr.hasNext();)
             {
                 String key = (String) itr.next();
                 CachedObject obj = null;
-                try {
+                try
+                {
                     obj = getObject(key);
-                } catch (ObjectExpiredException oee) {
+                }
+                catch (ObjectExpiredException oee)
+                {
                     // this is OK we just do not want this object
                     continue;
                 }
                 objects.add(obj);
             }
         }
-        return (List)objects;
+        return objects;
     }
 
-
     /**
-     * Circle through the cache and remove stale objects.  Frequency
-     * is determined by the cacheCheckFrequency property.
+     * Circle through the cache and remove stale objects. Frequency is
+     * determined by the cacheCheckFrequency property.
      */
     public void run()
     {
-        while (continueThread)
+        while (this.continueThread)
         {
             // Sleep for amount of time set in cacheCheckFrequency -
             // default = 5 seconds.
             try
             {
-                Thread.sleep(cacheCheckFrequency);
+                Thread.sleep(this.cacheCheckFrequency);
             }
             catch (InterruptedException exc)
             {
-                if (!continueThread) return;
+                if (!this.continueThread)
+                {
+                    return;
+                }
             }
 
             clearCache();
         }
     }
+
     /**
      * Iterate through the cache and remove or refresh stale objects.
      */
@@ -262,52 +285,58 @@ public class DefaultGlobalCacheService
         // change the Hashtable while enumerating over it.
         synchronized (this)
         {
-            for (Enumeration e = cache.keys(); e.hasMoreElements();)
+            for (Enumeration e = this.cache.keys(); e.hasMoreElements();)
             {
                 String key = (String) e.nextElement();
-                CachedObject co = (CachedObject) cache.get(key);
+                CachedObject co = (CachedObject) this.cache.get(key);
                 if (co instanceof RefreshableCachedObject)
                 {
                     RefreshableCachedObject rco = (RefreshableCachedObject) co;
                     if (rco.isUntouched())
-                        cache.remove(key);
-                    else if (rco.isStale()) // Do refreshing outside of sync block so as not
+                    {
+                        this.cache.remove(key);
+                    }
+                    else if (rco.isStale())
+                    {
                         // to prolong holding the lock on this object
                         refreshThese.add(key);
+                    }
                 }
                 else if (co.isStale())
                 {
-                    cache.remove(key);
+                    this.cache.remove(key);
                 }
             }
         }
         for (Iterator i = refreshThese.iterator(); i.hasNext();)
         {
             String key = (String) i.next();
-            CachedObject co = (CachedObject) cache.get(key);
+            CachedObject co = (CachedObject) this.cache.get(key);
             RefreshableCachedObject rco = (RefreshableCachedObject) co;
             rco.refresh();
         }
     }
+
     /**
      * Returns the number of objects currently stored in the cache
-     *
+     * 
      * @return int number of object in the cache
      */
     public int getNumberOfObjects()
     {
-        return cache.size();
+        return this.cache.size();
     }
+
     /**
      * Returns the current size of the cache.
-     *
+     * 
      * @return int representing current cache size in number of bytes
      */
     public int getCacheSize() throws IOException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(baos);
-        out.writeObject(cache);
+        out.writeObject(this.cache);
         out.flush();
         //
         // Subtract 4 bytes from the length, because the serialization
@@ -317,6 +346,7 @@ public class DefaultGlobalCacheService
         int objectsize = baos.toByteArray().length - 4;
         return objectsize;
     }
+
     /**
      * Flush the cache of all objects.
      */
@@ -324,10 +354,10 @@ public class DefaultGlobalCacheService
     {
         synchronized (this)
         {
-            for (Enumeration e = cache.keys(); e.hasMoreElements();)
+            for (Enumeration e = this.cache.keys(); e.hasMoreElements();)
             {
                 String key = (String) e.nextElement();
-                cache.remove(key);
+                this.cache.remove(key);
             }
         }
     }
@@ -338,8 +368,10 @@ public class DefaultGlobalCacheService
      */
     public void configure(Configuration conf) throws ConfigurationException
     {
-		cacheCheckFrequency = conf.getAttributeAsLong(CACHE_CHECK_FREQUENCY, DEFAULT_CACHE_CHECK_FREQUENCY);
-		cacheInitialSize = conf.getAttributeAsInteger(INITIAL_CACHE_SIZE, DEFAULT_INITIAL_CACHE_SIZE);
+        this.cacheCheckFrequency = conf.getAttributeAsLong(
+                CACHE_CHECK_FREQUENCY, DEFAULT_CACHE_CHECK_FREQUENCY);
+        this.cacheInitialSize = conf.getAttributeAsInteger(INITIAL_CACHE_SIZE,
+                DEFAULT_INITIAL_CACHE_SIZE);
     }
 
     /**
@@ -349,20 +381,21 @@ public class DefaultGlobalCacheService
     {
         try
         {
-            cache = new Hashtable(cacheInitialSize);
+            this.cache = new Hashtable(this.cacheInitialSize);
             // Start housekeeping thread.
-            continueThread = true;
-            housekeeping = new Thread(this);
+            this.continueThread = true;
+            this.housekeeping = new Thread(this);
             // Indicate that this is a system thread. JVM will quit only when
             // there are no more active user threads. Settings threads spawned
             // internally by Turbine as daemons allows commandline applications
             // using Turbine to terminate in an orderly manner.
-            housekeeping.setDaemon(true);
-            housekeeping.start();
+            this.housekeeping.setDaemon(true);
+            this.housekeeping.start();
         }
         catch (Exception e)
         {
-            throw new Exception("DefaultGlobalCacheService failed to initialize", e);
+            throw new Exception(
+                    "DefaultGlobalCacheService failed to initialize", e);
         }
     }
 
@@ -371,12 +404,13 @@ public class DefaultGlobalCacheService
      */
     public void dispose()
     {
-        continueThread = false;
-        housekeeping.interrupt();
+        this.continueThread = false;
+        this.housekeeping.interrupt();
     }
 
     /**
      * The name used to specify this component in TurbineResources.properties
+     * 
      * @deprecated part of the pre-avalon compatibility layer
      */
     protected String getName()

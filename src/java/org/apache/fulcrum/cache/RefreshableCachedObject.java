@@ -20,23 +20,22 @@ package org.apache.fulcrum.cache;
  */
 
 /**
- * The idea of the RefreshableCachedObject is that, rather than
- * removing items from the cache when they become stale, we'll tell them to
- * refresh themselves instead.  That way they'll always be in the
- * cache, and the code to refresh them will be run by the background
- * thread rather than by a user request thread.  You can also set a TTL (Time
- * To Live) for the object.  This way, if the object hasn't been touched
- * for the TTL period, then it will be removed from the cache.
- *
- * This extends CachedObject and provides a method for refreshing the
- * cached object, and resetting its expire time.
- *
+ * The idea of the RefreshableCachedObject is that, rather than removing items
+ * from the cache when they become stale, we'll tell them to refresh themselves
+ * instead. That way they'll always be in the cache, and the code to refresh
+ * them will be run by the background thread rather than by a user request
+ * thread. You can also set a TTL (Time To Live) for the object. This way, if
+ * the object hasn't been touched for the TTL period, then it will be removed
+ * from the cache.
+ * 
+ * This extends CachedObject and provides a method for refreshing the cached
+ * object, and resetting its expire time.
+ * 
  * @author <a href="mailto:nissim@nksystems.com">Nissim Karpenstein</a>
  * @author <a href="mailto:hps@intermeta.de">Henning P. Schmiedehausen</a>
  * @version $Id$
  */
-public class RefreshableCachedObject
-    extends CachedObject
+public class RefreshableCachedObject extends CachedObject
 {
 
     /**
@@ -56,35 +55,37 @@ public class RefreshableCachedObject
     private long lastAccess;
 
     /**
-     * Constructor; sets the object to expire in the default time (30
-     * minutes).
-     *
-     * @param o The object you want to cache.
+     * Constructor; sets the object to expire in the default time (30 minutes).
+     * 
+     * @param o
+     *            The object you want to cache.
      */
     public RefreshableCachedObject(Refreshable o)
     {
         super(o);
-        lastAccess = System.currentTimeMillis();
+        this.lastAccess = System.currentTimeMillis();
     }
 
     /**
      * Constructor.
-     *
-     * @param o The object to cache.
-     * @param expires How long before the object expires, in ms,
-     * e.g. 1000 = 1 second.
+     * 
+     * @param o
+     *            The object to cache.
+     * @param expires
+     *            How long before the object expires, in ms, e.g. 1000 = 1
+     *            second.
      */
-    public RefreshableCachedObject(Refreshable o,
-                                   long expires)
+    public RefreshableCachedObject(Refreshable o, long expires)
     {
         super(o, expires);
-        lastAccess = System.currentTimeMillis();
+        this.lastAccess = System.currentTimeMillis();
     }
 
     /**
      * Sets the timeToLive value
-     *
-     * @param timeToLive the new Value in milliseconds
+     * 
+     * @param timeToLive
+     *            the new Value in milliseconds
      */
     public synchronized void setTTL(long timeToLive)
     {
@@ -93,35 +94,41 @@ public class RefreshableCachedObject
 
     /**
      * Gets the timeToLive value.
-     *
+     * 
      * @return The current timeToLive value (in milliseconds)
      */
     public synchronized long getTTL()
     {
-        return timeToLive;
+        return this.timeToLive;
     }
 
     /**
-     * Sets the last acccess time to the current time.
+     * Sets the last access time to the current time.
      */
     public synchronized void touch()
     {
-        lastAccess = System.currentTimeMillis();
+        this.lastAccess = System.currentTimeMillis();
     }
 
     /**
-     * Returns true if the object hasn't been touched
-     * in the previous TTL period.
+     * Returns true if the object hasn't been touched in the previous TTL
+     * period.
      */
     public synchronized boolean isUntouched()
     {
-        if (timeToLive < 0)
+        if (this.timeToLive < 0)
+        {
             return false;
+        }
 
-        if (lastAccess + timeToLive < System.currentTimeMillis())
+        if (this.lastAccess + this.timeToLive < System.currentTimeMillis())
+        {
             return true;
+        }
         else
+        {
             return false;
+        }
     }
 
     /**
@@ -132,7 +139,7 @@ public class RefreshableCachedObject
         Refreshable r = (Refreshable) getContents();
         synchronized (this)
         {
-            created = System.currentTimeMillis();
+            this.created = System.currentTimeMillis();
             r.refresh();
         }
     }

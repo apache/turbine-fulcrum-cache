@@ -22,19 +22,17 @@ package org.apache.fulcrum.cache;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 
-
 /**
  * @author <a href="mailto:epugh@opensourceconnections.com">Eric Pugh</a>
- *
+ * 
  */
 public interface EHCacheService
 {
-	/** avalon idiom */
-	public static final String ROLE = EHCacheService.class.getName();
+    /** avalon idiom */
+    public static final String ROLE = EHCacheService.class.getName();
 
-	public CacheManager getCacheManager();
+    public CacheManager getCacheManager();
 
-	public Cache getCache(String cache);
-
+    public Cache getCache(String cache);
 
 }
