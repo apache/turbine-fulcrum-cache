@@ -21,7 +21,7 @@
   <extend>${basedir}/../project.xml</extend>
   <id>fulcrum-cache</id>
   <name>Fulcrum Cache Component</name>
-  <currentVersion>1.1</currentVersion>
+  <currentVersion>1.1.0</currentVersion>
   <versions>
     <version>
       <id>1.0.5</id>
@@ -29,9 +29,9 @@
       <tag>FULCRUM_CACHE_1_0_5</tag>
     </version>
     <version>
-      <id>1.1</id>
-      <name>1.1</name>
-      <tag>FULCRUM_CACHE_1_1</tag>
+      <id>1.1.0</id>
+      <name>1.1.0</name>
+      <tag>FULCRUM_CACHE_1_1_0</tag>
     </version>
   </versions>
   <dependencies>
