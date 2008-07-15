@@ -55,45 +55,67 @@
     </p>
   </section>
   <section name="GlobalCacheService" id="GlobalCacheService">
-    <p>
-      First, here is the role configuration.
-    </p>
-
-    <source><![CDATA[
+    <subsection name="Role Configuration">
+      <source><![CDATA[
     <role
         name="org.apache.fulcrum.cache.GlobalCacheService"
         shorthand="cache"
         default-class="org.apache.fulcrum.cache.DefaultGlobalCacheService"/>
-    ]]></source>
+      ]]></source>
+    </subsection>
 
-      <p>
-        And here is the configuration:
-      </p>
-    <source><![CDATA[
+    <subsection name="Component Configuration">
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>Datatype</th>
+          <th>Cardinality</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>@cacheInitialSize</td>
+          <td>int</td>
+          <td>[0|1]</td>
+          <td>
+            The initial size of the cache. The default is 20.
+          </td>
+        </tr>
+        <tr>
+          <td>@cacheCheckFrequency</td>
+          <td>int</td>
+          <td>[0|1]</td>
+          <td>
+            The cache uses a background thread to check for expired objects.
+            This defines the time between two checks in seconds. The default
+            is 5.
+          </td>
+        </tr>
+      </table>
+    </subsection>
+
+    <subsection name="Component Configuration Example">
+      <source><![CDATA[
     <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
-    ]]></source>
+      ]]></source>
+    </subsection>
   </section>
 
   <section name="EHCacheService" id="EHCacheService">
 
-    <p>
-      The role configuration looks very similar.
-    </p>
-
-    <source><![CDATA[
+    <subsection name="Role Configuration">
+      <source><![CDATA[
     <role
         name="org.apache.fulcrum.cache.EHCacheService"
         shorthand="ehcache"
         default-class="org.apache.fulcrum.cache.impl.DefaultEHCacheService"/>
-    ]]></source>
+      ]]></source>
+    </subsection>
 
-    <p>
-      There is nothing to configure for the component.
-    </p>
-    <source><![CDATA[
-    <ehcache />
-    ]]></source>
-
+    <subsection name="Component Configuration">
+      <p>
+        There is nothing to configure for the component.
+      </p>
+    </subsection>
   </section>
 
   <section name="JCSCacheService" id="JCSCacheService">
@@ -101,40 +123,74 @@
 	<p>
 	  The JCS cache service implements the interface <code>GlobalCacheService</code> and thus can
 	  serve as a drop-in replacement for <code>DefaultGlobalCacheService</code>. However it is
-	  possible to configure the cache behaviour in much more detail to provide disk caches or lateral TCP
+	  possible to configure the cache behavior in much more detail to provide disk caches or lateral TCP
 	  caches for example.
 	</p>
-    <p>
-      The role configuration only differs from the <code>GlobalCacheService</code> in the 
-      <code>default-class</code>.
-    </p>
 
-    <source><![CDATA[
+    <subsection name="Role Configuration">
+      <source><![CDATA[
     <role
         name="org.apache.fulcrum.cache.GlobalCacheService"
         shorthand="jcscache"
         default-class="org.apache.fulcrum.cache.impl.JCSCacheService"/>
-    ]]></source>
+      ]]></source>
+    </subsection>
 
-    <p>
-      And here is the configuration:
-    </p>
-    <source><![CDATA[
+    <subsection name="Component Configuration">
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>Datatype</th>
+          <th>Cardinality</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>cacheCheckFrequency</td>
+          <td>int</td>
+          <td>[0|1]</td>
+          <td>
+            The cache uses a background thread to check for expired objects.
+            This defines the time between two checks in milliseconds. The 
+            default is 5000.
+          </td>
+        </tr>
+        <tr>
+          <td>region</td>
+          <td>String</td>
+          <td>[0|1]</td>
+          <td>
+            The JCS cache region name to use for the cache The default is 
+            <code>fulcrum</code>.
+            JCS will store the objects in a group named <code>default_group</code> 
+            in the given region.
+          </td>
+        </tr>
+        <tr>
+          <td>configurationFile</td>
+          <td>String</td>
+          <td>[0|1]</td>
+          <td>
+            The the location of the JCS configuration file. Please note that 
+            JCS uses a class loader to read this file, so make sure this path 
+            is part of your classpath. The default is <code>/cache.ccf</code>.
+          </td>
+        </tr>
+      </table>
+      <p>
+        See <a href="http://jakarta.apache.org/jcs/">the JCS site</a> for more 
+        information about configuring JCS.
+      </p>
+    </subsection>
+
+    <subsection name="Component Configuration Example">
+      <source><![CDATA[
     <jcscache>
     	<cacheCheckFrequency>5000</cacheCheckFrequency>
     	<region>fulcrum</region>
     	<configurationFile>/cache.ccf</configurationFile>
     </jcscache>
-    ]]></source>
-    <p>
-      The region parameter is the name of the cache region to use when caching objects. It defaults to
-      <code>fulcrum</code>. JCS will store the objects in a group named <code>default_group</code> in that
-      region. The configuration file parameter gives the location of the JCS configuration file. Please
-      note that JCS uses a class loader to read this file, so make sure this path is part of your classpath.
-      The default values of all configuration settings are shown in the example.
-      See <a href="http://jakarta.apache.org/jcs/">the JCS site</a> for more information about configuring
-      JCS.
-    </p>
+      ]]></source>
+    </subsection>
   </section>
 
   <section name="Usage">
@@ -181,7 +237,7 @@
       The cache also supports <code>RefreshableCachedObject</code>s. These objects must implement
       a <code>refresh()</code>-method which will be called every time the cache detects that the
       object is expired. This way, you can keep objects in the cache that "auto-refresh" 
-      asynchronuously. 
+      asynchronously. 
     </p>
   </section>
 
