@@ -27,7 +27,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>fulcrum-cache</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.0-SNAPSHOT</version>
   <name>Fulcrum Cache</name>
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
@@ -57,6 +57,15 @@
         <role>Java Developer</role>
       </roles>
     </developer>
+    <developer>
+      <name>Thomas Vandahl</name>
+      <id>tv</id>
+      <email>tv@apache.org</email>
+      <organization />
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>    
   </developers>
 
   <dependencies>
@@ -68,7 +77,7 @@
     <dependency>
       <groupId>net.sf.ehcache</groupId>
       <artifactId>ehcache</artifactId>
-      <version>1.2.4</version>
+      <version>1.6.2</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -116,5 +125,11 @@
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
     <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
   </build>
+
+  <properties>
+    <!-- This bits are used for the staging directory -->
+    <fulcrum.release.version>1.1.0</fulcrum.release.version>
+    <fulcrum.rc.version>RC1</fulcrum.rc.version>  
+  </properties>    
 	
 </project>
