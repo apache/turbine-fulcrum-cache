@@ -25,6 +25,10 @@
 
   <body>
     <release version="1.1.0" date="in Subversion">
+      <action type="update" dev="sgoeschl" date="2010-03-22">
+        Pulling in commons-logging-1.1.1 to avoid the 1.1 version
+        which depends on an outdated Avalon framework
+      </action>
       <action type="update" dev="sgoeschl" date="2010-03-18">
         Updating the M2 build.
       </action>
