@@ -1,4 +1,4 @@
-package org.apache.fulcrum.cache;
+package org.apache.fulcrum.cache.impl;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -35,6 +35,10 @@ import org.apache.avalon.framework.configuration.Configuration;
 import org.apache.avalon.framework.configuration.ConfigurationException;
 import org.apache.avalon.framework.logger.AbstractLogEnabled;
 import org.apache.avalon.framework.thread.ThreadSafe;
+import org.apache.fulcrum.cache.CachedObject;
+import org.apache.fulcrum.cache.GlobalCacheService;
+import org.apache.fulcrum.cache.ObjectExpiredException;
+import org.apache.fulcrum.cache.RefreshableCachedObject;
 
 /**
  * This Service functions as a Global Cache. A global cache is a good place to

@@ -81,18 +81,17 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.1.1</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.apache.jcs</groupId>
       <artifactId>jcs</artifactId>
       <version>1.3</version>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <!-- pull in a newer version of commons-logging than JCS -->
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1.1</version>
-      <optional>true</optional>
-    </dependency>    
     <!-- testing dependencies -->
     <dependency>
       <groupId>org.apache.fulcrum</groupId>
@@ -114,6 +113,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <systemProperties>
+            <property>
+              <name>fulcrum.cache.skip.long.tests</name>
+              <value>true</value>
+            </property>
+          </systemProperties>
           <additionalClasspathElements>
             <additionalClasspathElement>${basedir}/src/test</additionalClasspathElement>
           </additionalClasspathElements>
@@ -124,12 +129,6 @@
     <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
   </build>
 
-  <properties>
-    <!-- This bits are used for the staging directory -->
-    <fulcrum.release.version>1.1.0</fulcrum.release.version>
-    <fulcrum.rc.version>RC1</fulcrum.rc.version>  
-  </properties>    
-	
   <profiles>
     <profile>
       <id>rc</id>
@@ -143,5 +142,12 @@
       </distributionManagement>
     </profile>
   </profiles>
-
+  
+  <properties>
+    <!-- This bits are used for the staging directory -->
+    <fulcrum.release.version>1.1.0</fulcrum.release.version>
+    <fulcrum.rc.version>RC1</fulcrum.rc.version>  
+    <fulcrum.deployment.protocol>scpexe</fulcrum.deployment.protocol>
+  </properties>    
+	
 </project>

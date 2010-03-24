@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.avalon.framework.component.ComponentException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.fulcrum.cache.impl.DefaultGlobalCacheService;
 import org.apache.fulcrum.testcontainer.BaseUnitTest;
 
 /**
@@ -42,15 +43,15 @@ import org.apache.fulcrum.testcontainer.BaseUnitTest;
 public class CacheTest extends BaseUnitTest
 {
 
-    private GlobalCacheService globalCache = null;
+    protected GlobalCacheService globalCache = null;
 
-    private static final String cacheKey = "CacheKey";
+    protected static final String cacheKey = "CacheKey";
 
-    private static final String cacheKey_2 = "CacheKey_2";
+    protected static final String cacheKey_2 = "CacheKey_2";
 
     public static final String SKIP_TESTS_KEY = "fulcrum.cache.skip.long.tests";
 
-    private static final Log LOG = LogFactory.getLog(CacheTest.class);
+    protected static final Log LOG = LogFactory.getLog(CacheTest.class);
 
     /**
      * Defines the testcase name for JUnit.
@@ -63,13 +64,24 @@ public class CacheTest extends BaseUnitTest
         super(name);
     }
 
+    /**
+     * Method to configure the role name of the service used
+     * 
+     * @return the role name of the service to lookup
+     */
+    protected String getCacheRoleName()
+    {
+        return GlobalCacheService.ROLE;
+    }
+    
     protected void setUp() throws Exception
     {
         super.setUp();
+        
         try
         {
             this.globalCache = (GlobalCacheService) this
-                    .lookup(GlobalCacheService.ROLE);
+                    .lookup(getCacheRoleName());
         }
         catch (ComponentException e)
         {
@@ -95,7 +107,7 @@ public class CacheTest extends BaseUnitTest
         this.globalCache.addObject(cacheKey, cacheObject1);
         // Get object from cache
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrievea cached object 1", retrievedObject);
+        assertNotNull("Did not retrieve a cached object 1", retrievedObject);
         assertSame("Did not retrieve a correct, expected cached object 1",
                 retrievedObject, cacheObject1);
         // Remove object from cache
@@ -139,34 +151,34 @@ public class CacheTest extends BaseUnitTest
         assertNotNull("Failed to create a cachable object 1", cacheObject1);
         this.globalCache.addObject(cacheKey, cacheObject1);
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieved a cached object 1", retrievedObject);
-        assertEquals("Did not retrieved correct cached object", cacheObject1,
+        assertNotNull("Did not retrieve a cached object 1", retrievedObject);
+        assertEquals("Did not retrieve correct cached object", cacheObject1,
                 retrievedObject);
         // Create and add Object #2
         cacheObject2 = new CachedObject(testString);
         assertNotNull("Failed to create a cachable object 2", cacheObject2);
         this.globalCache.addObject(cacheKey_2, cacheObject2);
         retrievedObject = this.globalCache.getObject(cacheKey_2);
-        assertNotNull("Did not retrieved a cached object 2", retrievedObject);
-        assertEquals("Did not retrieved correct cached object 2", cacheObject2,
+        assertNotNull("Did not retrieve a cached object 2", retrievedObject);
+        assertEquals("Did not retrieve correct cached object 2", cacheObject2,
                 retrievedObject);
         // Get object #1
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieved a cached object 1. Attempt #2",
+        assertNotNull("Did not retrieve a cached object 1. Attempt #2",
                 retrievedObject);
-        assertEquals("Did not retrieved correct cached object 1. Attempt #2",
+        assertEquals("Did not retrieve correct cached object 1. Attempt #2",
                 cacheObject1, retrievedObject);
         // Get object #1
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieved a cached object 1. Attempt #3",
+        assertNotNull("Did not retrieve a cached object 1. Attempt #3",
                 retrievedObject);
-        assertEquals("Did not retrieved correct cached object 1. Attempt #3",
+        assertEquals("Did not retrieve correct cached object 1. Attempt #3",
                 cacheObject1, retrievedObject);
         // Get object #2
         retrievedObject = this.globalCache.getObject(cacheKey_2);
-        assertNotNull("Did not retrieved a cached object 2. Attempt #2",
+        assertNotNull("Did not retrieve a cached object 2. Attempt #2",
                 retrievedObject);
-        assertEquals("Did not retrieved correct cached object 2 Attempt #2",
+        assertEquals("Did not retrieve correct cached object 2 Attempt #2",
                 cacheObject2, retrievedObject);
         // Remove objects
         this.globalCache.removeObject(cacheKey);
@@ -193,8 +205,8 @@ public class CacheTest extends BaseUnitTest
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieved a cached object", retrievedObject);
-            assertEquals("Did not retrieved correct cached object",
+            assertNotNull("Did not retrieve a cached object", retrievedObject);
+            assertEquals("Did not retrieve correct cached object",
                     cacheObject, retrievedObject);
         }
         catch (ObjectExpiredException e)
@@ -262,21 +274,28 @@ public class CacheTest extends BaseUnitTest
      */
     public void testObjectCount() throws Exception
     {
-        assertNotNull("Could not retrive cache service.", this.globalCache);
+        assertNotNull("Could not retrieve cache service.", this.globalCache);
+        
+        long cacheRefresh = getCacheRefresh();
+        
         // Create and add Object that expires in 1.5 turbine Refresh
-        long expireTime = getCacheRefresh() + getCacheRefresh() / 2;
+        long expireTime = cacheRefresh + cacheRefresh / 2;
+        
         CachedObject cacheObject = new CachedObject("This is a test",
                 expireTime);
         assertNotNull("Failed to create a cachable object", cacheObject);
+        
         this.globalCache.addObject(cacheKey, cacheObject);
         assertEquals("After adding 1 Object", 1, this.globalCache
                 .getNumberOfObjects());
+        
         // Wait until we're passed 1 refresh, but not half way.
-        Thread.sleep(getCacheRefresh() + getCacheRefresh() / 3);
+        Thread.sleep(cacheRefresh + cacheRefresh / 3);
         assertEquals("After one refresh", 1, this.globalCache
                 .getNumberOfObjects());
+        
         // Wait until we're passed 2 more refreshes
-        Thread.sleep((getCacheRefresh() * 2) + getCacheRefresh() / 3);
+        Thread.sleep((cacheRefresh * 2) + cacheRefresh / 3);
         assertEquals("After three refreshes", 0, this.globalCache
                 .getNumberOfObjects());
     }
@@ -304,8 +323,8 @@ public class CacheTest extends BaseUnitTest
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieved a cached object", retrievedObject);
-            assertEquals("Did not retrieved correct cached object",
+            assertNotNull("Did not retrieve a cached object", retrievedObject);
+            assertEquals("Did not retrieve correct cached object",
                     cacheObject, retrievedObject);
         }
         catch (ObjectExpiredException e)
@@ -321,7 +340,7 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = null;
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieved a cached object, after sleep",
+            assertNotNull("Did not retrieve a cached object, after sleep",
                     retrievedObject);
             assertNotNull("Cached object has no contents, after sleep.",
                     ((RefreshableCachedObject) retrievedObject).getContents());
@@ -347,7 +366,7 @@ public class CacheTest extends BaseUnitTest
             {
                 retrievedObject = null;
                 retrievedObject = this.globalCache.getObject(cacheKey);
-                assertNotNull("Did not retrieved a cached object, after sleep",
+                assertNotNull("Did not retrieve a cached object, after sleep",
                         retrievedObject);
                 assertNotNull("Cached object has no contents, after sleep.",
                         ((RefreshableCachedObject) retrievedObject)
@@ -406,14 +425,14 @@ public class CacheTest extends BaseUnitTest
         assertEquals("Returned TimeToLive", getTestExpireTime(), cacheObject
                 .getTTL());
         // Add object to Cache
-        long addTime = System.currentTimeMillis();
         this.globalCache.addObject(cacheKey, cacheObject);
+        long addTime = System.currentTimeMillis();
         // Try to get un-expired object
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieved a cached object", retrievedObject);
-            assertEquals("Did not retrieved correct cached object",
+            assertNotNull("Did not retrieve a cached object", retrievedObject);
+            assertEquals("Did not retrieve correct cached object",
                     cacheObject, retrievedObject);
         }
         catch (ObjectExpiredException e)
@@ -566,8 +585,16 @@ public class CacheTest extends BaseUnitTest
      */
     private long getCacheRefresh()
     {
-        return ((DefaultGlobalCacheService) this.globalCache)
-                .getCacheCheckFrequency() * 1000;
+        try
+        {
+            DefaultGlobalCacheService cache = 
+                (DefaultGlobalCacheService)this.lookup(GlobalCacheService.ROLE);
+            return cache.getCacheCheckFrequency() * 1000L;
+        }
+        catch (ComponentException e)
+        {
+            return 5000;
+        }
     }
 
     /**

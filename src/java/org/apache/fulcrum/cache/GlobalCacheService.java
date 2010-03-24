@@ -33,12 +33,6 @@ import org.apache.avalon.framework.component.Component;
  */
 public interface GlobalCacheService extends Component
 {
-    /*
-     * TODO: This GlobalCacheService should be usable by both the
-     * DefaultEHCacheService and the DefaultGlobalCache. The CacheObject class
-     * from GCS and the Element class from EHCS are very similar.
-     */
-
     /** Avalon role - used to id the component within the manager */
     String ROLE = GlobalCacheService.class.getName();
 

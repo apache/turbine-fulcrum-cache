@@ -22,12 +22,12 @@
     <role
         name="org.apache.fulcrum.cache.GlobalCacheService"
         shorthand="cache"
-        default-class="org.apache.fulcrum.cache.DefaultGlobalCacheService"/>
+        default-class="org.apache.fulcrum.cache.impl.DefaultGlobalCacheService"/>
 
     <role
-        name="org.apache.fulcrum.cache.EHCacheService"
+        name="org.apache.fulcrum.cache.GlobalCacheService_EH"
         shorthand="ehcache"
-        default-class="org.apache.fulcrum.cache.impl.DefaultEHCacheService"/>
+        default-class="org.apache.fulcrum.cache.impl.EHCacheService"/>
 
     <role
         name="org.apache.fulcrum.cache.GlobalCacheService_JCS"

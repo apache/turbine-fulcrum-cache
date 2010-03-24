@@ -60,7 +60,7 @@
     <role
         name="org.apache.fulcrum.cache.GlobalCacheService"
         shorthand="cache"
-        default-class="org.apache.fulcrum.cache.DefaultGlobalCacheService"/>
+        default-class="org.apache.fulcrum.cache.impl.DefaultGlobalCacheService"/>
       ]]></source>
     </subsection>
 
@@ -105,16 +105,63 @@
     <subsection name="Role Configuration">
       <source><![CDATA[
     <role
-        name="org.apache.fulcrum.cache.EHCacheService"
+        name="org.apache.fulcrum.cache.GlobalCacheService"
         shorthand="ehcache"
-        default-class="org.apache.fulcrum.cache.impl.DefaultEHCacheService"/>
+        default-class="org.apache.fulcrum.cache.impl.EHCacheService"/>
       ]]></source>
     </subsection>
 
     <subsection name="Component Configuration">
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>Datatype</th>
+          <th>Cardinality</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>cacheCheckFrequency</td>
+          <td>int</td>
+          <td>[0|1]</td>
+          <td>
+            The cache uses a background thread to check for expired objects.
+            This defines the time between two checks in milliseconds. The 
+            default is 5000.
+          </td>
+        </tr>
+        <tr>
+          <td>cacheName</td>
+          <td>String</td>
+          <td>[0|1]</td>
+          <td>
+            The EHcache cache name to use for the cache. The default is 
+            <code>fulcrum</code>.
+          </td>
+        </tr>
+        <tr>
+          <td>configurationFile</td>
+          <td>String</td>
+          <td>[0|1]</td>
+          <td>
+            The the location of the EHcache configuration file.
+            The default is to create a default cache withut settings.
+          </td>
+        </tr>
+      </table>
       <p>
-        There is nothing to configure for the component.
+        See <a href="http://jakarta.apache.org/jcs/">the JCS site</a> for more 
+        information about configuring JCS.
       </p>
+    </subsection>
+
+    <subsection name="Component Configuration Example">
+      <source><![CDATA[
+    <ehcache>
+        <cacheCheckFrequency>5000</cacheCheckFrequency>
+        <cacheName>fulcrum</cacheName>
+        <configurationFile>ehcache.xml</configurationFile>
+    </ehcache>
+      ]]></source>
     </subsection>
   </section>
 
@@ -159,7 +206,7 @@
           <td>String</td>
           <td>[0|1]</td>
           <td>
-            The JCS cache region name to use for the cache The default is 
+            The JCS cache region name to use for the cache. The default is 
             <code>fulcrum</code>.
             JCS will store the objects in a group named <code>default_group</code> 
             in the given region.

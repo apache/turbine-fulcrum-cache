@@ -19,7 +19,11 @@
 -->
 <componentConfig>
     <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
-    <ehcache/>
+    <ehcache>
+        <cacheCheckFrequency>5000</cacheCheckFrequency>
+        <cacheName>fulcrum</cacheName>
+        <!-- configurationFile>ehcache.xml</configurationFile -->
+    </ehcache>
     <jcscache>
     	<cacheCheckFrequency>5000</cacheCheckFrequency>
         <region>Cache_Test</region>
