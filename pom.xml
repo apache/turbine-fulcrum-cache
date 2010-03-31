@@ -7,16 +7,16 @@
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>fulcrum-cache</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1-SNAPSHOT</version>
   <name>Fulcrum Cache</name>
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
   <url>http://turbine.apache.org/fulcrum/fulcrum-cache</url>
 		
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/tags/FULCRUM_CACHE_1_1_0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/tags/FULCRUM_CACHE_1_1_0</developerConnection>
-    <url>http://svn.apache.org/viewcvs/turbine/fulcrum/tags/FULCRUM_CACHE_1_1_0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</developerConnection>
+    <url>http://svn.apache.org/viewcvs/turbine/fulcrum/trunk/cache/</url>
   </scm>
 
   <distributionManagement>
