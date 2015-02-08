@@ -33,7 +33,7 @@
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</developerConnection>
-    <url>http://svn.apache.org/viewcvs/turbine/fulcrum/trunk/cache/</url>
+    <url>http://svn.apache.org/viewvc/turbine/fulcrum/trunk/cache/</url>
   </scm>
 
   <distributionManagement>
