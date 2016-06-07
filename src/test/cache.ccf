@@ -17,13 +17,13 @@
 # Java Caching System configuration
 
 jcs.default=
-jcs.default.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.default.cacheattributes=org.apache.commons.jcs.engine.CompositeCacheAttributes
 jcs.default.cacheattributes.MaxObjects=100
-jcs.default.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
-jcs.default.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.default.cacheattributes.MemoryCacheName=org.apache.jcs.commons.engine.memory.lru.LRUMemoryCache
+jcs.default.elementattributes=org.apache.commons.jcs.engine.ElementAttributes
 
 jcs.region.Cache_Test=
-jcs.region.Cache_Test.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.region.Cache_Test.cacheattributes=org.apache.commons.jcs.engine.CompositeCacheAttributes
 jcs.region.Cache_Test.cacheattributes.MaxObjects=100
-jcs.region.Cache_Test.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
-jcs.region.Cache_Test.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.region.Cache_Test.cacheattributes.MemoryCacheName=org.apache.commons.jcs.engine.memory.lru.LRUMemoryCache
+jcs.region.Cache_Test.elementattributes=org.apache.commons.jcs.engine.ElementAttributes
