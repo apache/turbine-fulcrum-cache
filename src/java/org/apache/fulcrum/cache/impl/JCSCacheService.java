@@ -68,7 +68,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
     /**
      * Instance of the JCS cache
      */
-    private GroupCacheAccess<String, CachedObject> cacheManager;
+    private GroupCacheAccess<String, CachedObject<?>> cacheManager;
 
     /**
      * JCS region to use
@@ -150,9 +150,10 @@ public class JCSCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
      */
     @Override
-	public CachedObject getObject(String id) throws ObjectExpiredException
+	public <T> CachedObject<T> getObject(String id) throws ObjectExpiredException
     {
-        CachedObject obj = this.cacheManager.getFromGroup(id, group);
+        @SuppressWarnings("unchecked")
+        CachedObject<T> obj = (CachedObject<T>)this.cacheManager.getFromGroup(id, group);
 
         if (obj == null)
         {
@@ -164,7 +165,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
         {
             if (obj instanceof RefreshableCachedObject)
             {
-                RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
                 if (rco.isUntouched())
                 {
                     // Do not refresh an object that has exceeded TimeToLive
@@ -192,7 +193,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
         if (obj instanceof RefreshableCachedObject)
         {
             // notify it that it's being accessed.
-            RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
             rco.touch();
         }
 
@@ -204,7 +205,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
      *      org.apache.fulcrum.cache.CachedObject)
      */
     @Override
-	public void addObject(String id, CachedObject o)
+	public <T> void addObject(String id, CachedObject<T> o)
     {
         try
         {
@@ -265,13 +266,13 @@ public class JCSCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#getCachedObjects()
      */
     @Override
-	public List<CachedObject> getCachedObjects()
+	public List<CachedObject<?>> getCachedObjects()
     {
-        ArrayList<CachedObject> values = new ArrayList<CachedObject>();
+        ArrayList<CachedObject<?>> values = new ArrayList<CachedObject<?>>();
 
         for (String key : this.cacheManager.getGroupKeys(group))
         {
-            CachedObject o = this.cacheManager.getFromGroup(key, group);
+            CachedObject<?> o = this.cacheManager.getFromGroup(key, group);
             if (o != null)
             {
                 values.add(o);
@@ -306,7 +307,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
 
             for (String key : this.cacheManager.getGroupKeys(group))
             {
-                CachedObject o = this.cacheManager.getFromGroup(key, group);
+                CachedObject<?> o = this.cacheManager.getFromGroup(key, group);
                 if (o == null)
                 {
                     removeObject(key);
@@ -315,7 +316,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
                 {
                     if (o instanceof RefreshableCachedObject)
                     {
-                        RefreshableCachedObject rco = (RefreshableCachedObject) o;
+                        RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) o;
                         if (rco.isUntouched())
                         {
                             this.cacheManager.removeFromGroup(key, group);
