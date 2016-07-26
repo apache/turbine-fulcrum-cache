@@ -27,15 +27,15 @@ package org.apache.fulcrum.cache;
  * thread. You can also set a TTL (Time To Live) for the object. This way, if
  * the object hasn't been touched for the TTL period, then it will be removed
  * from the cache.
- * 
+ *
  * This extends CachedObject and provides a method for refreshing the cached
  * object, and resetting its expire time.
- * 
+ *
  * @author <a href="mailto:nissim@nksystems.com">Nissim Karpenstein</a>
  * @author <a href="mailto:hps@intermeta.de">Henning P. Schmiedehausen</a>
  * @version $Id$
  */
-public class RefreshableCachedObject extends CachedObject
+public class RefreshableCachedObject<T extends Refreshable> extends CachedObject<T>
 {
 
     /**
@@ -56,11 +56,11 @@ public class RefreshableCachedObject extends CachedObject
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
-     * 
+     *
      * @param o
      *            The object you want to cache.
      */
-    public RefreshableCachedObject(Refreshable o)
+    public RefreshableCachedObject(T o)
     {
         super(o);
         this.lastAccess = System.currentTimeMillis();
@@ -68,14 +68,14 @@ public class RefreshableCachedObject extends CachedObject
 
     /**
      * Constructor.
-     * 
+     *
      * @param o
      *            The object to cache.
      * @param expires
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public RefreshableCachedObject(Refreshable o, long expires)
+    public RefreshableCachedObject(T o, long expires)
     {
         super(o, expires);
         this.lastAccess = System.currentTimeMillis();
@@ -83,7 +83,7 @@ public class RefreshableCachedObject extends CachedObject
 
     /**
      * Sets the timeToLive value
-     * 
+     *
      * @param timeToLive
      *            the new Value in milliseconds
      */
@@ -94,7 +94,7 @@ public class RefreshableCachedObject extends CachedObject
 
     /**
      * Gets the timeToLive value.
-     * 
+     *
      * @return The current timeToLive value (in milliseconds)
      */
     public synchronized long getTTL()
@@ -136,7 +136,7 @@ public class RefreshableCachedObject extends CachedObject
      */
     public void refresh()
     {
-        Refreshable r = (Refreshable) getContents();
+        Refreshable r = getContents();
         synchronized (this)
         {
             this.created = System.currentTimeMillis();

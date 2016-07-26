@@ -21,7 +21,6 @@ package org.apache.fulcrum.cache.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import net.sf.ehcache.Cache;
@@ -42,10 +41,10 @@ import org.apache.fulcrum.cache.RefreshableCachedObject;
 
 /**
  * Default implementation of EHCacheService
- * 
+ *
  * @author <a href="mailto:epughNOSPAM@opensourceconnections.com">Eric Pugh</a>
  * @author <a href="mailto:tv@apache.org">Thomas Vandahl</a>
- * 
+ *
  */
 public class EHCacheService extends AbstractLogEnabled implements
         GlobalCacheService, Runnable, Configurable, Disposable, Initializable, ThreadSafe
@@ -93,6 +92,7 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.avalon.framework.configuration.Configurable#configure(org.apache.avalon.framework.configuration.Configuration)
      */
+    @Override
     public void configure(Configuration config) throws ConfigurationException
     {
         this.cacheCheckFrequency = config.getChild("cacheCheckFrequency")
@@ -104,6 +104,7 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.avalon.framework.activity.Initializable#initialize()
      */
+    @Override
     public void initialize() throws Exception
     {
         if (this.configFile == null)
@@ -115,9 +116,9 @@ public class EHCacheService extends AbstractLogEnabled implements
         {
             this.cacheManager = new CacheManager(this.configFile);
         }
-        
+
         this.cache = this.cacheManager.getCache(this.cacheName);
-        
+
         // Start housekeeping thread.
         this.continueThread = true;
         this.refreshing = new Thread(this);
@@ -129,13 +130,14 @@ public class EHCacheService extends AbstractLogEnabled implements
         this.refreshing.setDaemon(true);
         this.refreshing.setName("EHCacheService Refreshing");
         this.refreshing.start();
-        
+
         getLogger().debug("EHCacheService started!");
     }
 
     /**
      * @see org.apache.avalon.framework.activity.Disposable#dispose()
      */
+    @Override
     public void dispose()
     {
         this.continueThread = false;
@@ -146,11 +148,12 @@ public class EHCacheService extends AbstractLogEnabled implements
         this.cache = null;
         getLogger().debug("EHCacheService stopped!");
     }
-    
+
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#addObject(java.lang.String, org.apache.fulcrum.cache.CachedObject)
      */
-    public void addObject(String id, CachedObject o)
+    @Override
+    public <T> void addObject(String id, CachedObject<T> o)
     {
         Element cacheElement = new Element(id, o);
 
@@ -164,14 +167,13 @@ public class EHCacheService extends AbstractLogEnabled implements
             cacheElement.setTimeToLive((int)(o.getExpires() + 500) / 1000);
         }
 
-        cacheElement.setCreateTime();
-
         this.cache.put(cacheElement);
     }
 
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#flushCache()
      */
+    @Override
     public void flushCache()
     {
         this.cache.removeAll();
@@ -180,17 +182,18 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getCachedObjects()
      */
-    public List getCachedObjects()
+    @Override
+    public List<CachedObject<?>> getCachedObjects()
     {
-        ArrayList values = new ArrayList();
+        ArrayList<CachedObject<?>> values = new ArrayList<CachedObject<?>>();
 
-        for (Iterator i = getKeys().iterator(); i.hasNext();)
+        for (String key : getKeys())
         {
-            Element cachedElement = this.cache.get(i.next());
-            
+            Element cachedElement = this.cache.get(key);
+
             if (cachedElement != null)
             {
-                values.add(cachedElement.getObjectValue());
+                values.add((CachedObject<?>)cachedElement.getObjectValue());
             }
         }
 
@@ -200,6 +203,7 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getCacheSize()
      */
+    @Override
     public int getCacheSize() throws IOException
     {
         return (int)this.cache.calculateInMemorySize();
@@ -208,14 +212,18 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getKeys()
      */
-    public List getKeys()
+    @Override
+    public List<String> getKeys()
     {
-        return this.cache.getKeysWithExpiryCheck();
+        @SuppressWarnings("unchecked")
+        List<String> keysWithExpiryCheck = this.cache.getKeysWithExpiryCheck();
+        return keysWithExpiryCheck;
     }
 
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getNumberOfObjects()
      */
+    @Override
     public int getNumberOfObjects()
     {
         return getKeys().size();
@@ -224,23 +232,25 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
      */
-    public CachedObject getObject(String id) throws ObjectExpiredException
+    @Override
+    public <T> CachedObject<T> getObject(String id) throws ObjectExpiredException
     {
         Element cachedElement = this.cache.get(id);
-        
+
         if (cachedElement == null)
         {
             // Not in the cache.
             throw new ObjectExpiredException();
         }
 
-        CachedObject obj = (CachedObject)cachedElement.getObjectValue();
-        
+        @SuppressWarnings("unchecked")
+        CachedObject<T> obj = (CachedObject<T>)cachedElement.getObjectValue();
+
         if (obj.isStale())
         {
             if (obj instanceof RefreshableCachedObject)
             {
-                RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
                 if (rco.isUntouched())
                 {
                     // Do not refresh an object that has exceeded TimeToLive
@@ -268,7 +278,7 @@ public class EHCacheService extends AbstractLogEnabled implements
         if (obj instanceof RefreshableCachedObject)
         {
             // notify it that it's being accessed.
-            RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
             rco.touch();
         }
 
@@ -278,6 +288,7 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#removeObject(java.lang.String)
      */
+    @Override
     public void removeObject(String id)
     {
         this.cache.remove(id);
@@ -287,6 +298,7 @@ public class EHCacheService extends AbstractLogEnabled implements
      * Circle through the cache and refresh stale objects. Frequency is
      * determined by the cacheCheckFrequency property.
      */
+    @Override
     public void run()
     {
         while (this.continueThread)
@@ -305,23 +317,21 @@ public class EHCacheService extends AbstractLogEnabled implements
                 }
             }
 
-            for (Iterator i = getKeys().iterator(); i.hasNext();)
+            for (String key : getKeys())
             {
-                String key = (String) i.next();
-                
                 Element cachedElement = this.cache.get(key);
-                
+
                 if (cachedElement == null)
                 {
                     this.cache.remove(key);
                     continue;
                 }
-                
+
                 Object o = cachedElement.getObjectValue();
-                
+
                 if (o instanceof RefreshableCachedObject)
                 {
-                    RefreshableCachedObject rco = (RefreshableCachedObject) o;
+                    RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) o;
                     if (rco.isUntouched())
                     {
                         this.cache.remove(key);

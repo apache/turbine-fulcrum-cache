@@ -23,14 +23,14 @@ import java.io.Serializable;
 
 /**
  * Wrapper for an object you want to store in a cache for a period of time.
- * 
+ *
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
  * @author <a href="mailto:hps@intermeta.de">Henning P. Schmiedehausen</a>
  * @author <a href="mailto:epugh@upstate.com">Eric Pugh</a>
  * @version $Id$
  */
 
-public class CachedObject implements Serializable
+public class CachedObject<T> implements Serializable
 {
     /*
      * TODO: The old Turbine version you could set the default age from Turbine.
@@ -50,7 +50,7 @@ public class CachedObject implements Serializable
     public static final int FOREVER = -1;
 
     /** The object to be cached. */
-    private Object contents = null;
+    private T contents = null;
 
     /** Default age (30 minutes). */
     private long defaultage = 1800000;
@@ -66,27 +66,25 @@ public class CachedObject implements Serializable
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
-     * 
+     *
      * @param o
      *            The object you want to cache.
      */
-    public CachedObject(Object o)
+    public CachedObject(T o)
     {
-        this.contents = o;
-        this.expires = this.defaultage;
-        this.created = System.currentTimeMillis();
+        this(o, DEFAULT);
     }
 
     /**
      * Constructor.
-     * 
+     *
      * @param o
      *            The object to cache.
      * @param expires
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public CachedObject(Object o, long expires)
+    public CachedObject(T o, long expires)
     {
         if (expires == DEFAULT)
         {
@@ -100,17 +98,17 @@ public class CachedObject implements Serializable
 
     /**
      * Returns the cached object.
-     * 
+     *
      * @return The cached object.
      */
-    public Object getContents()
+    public T getContents()
     {
         return this.contents;
     }
 
     /**
      * Returns the creation time for the object.
-     * 
+     *
      * @return When the object was created.
      */
     public long getCreated()
@@ -120,7 +118,7 @@ public class CachedObject implements Serializable
 
     /**
      * Returns the expiration time for the object.
-     * 
+     *
      * @return When the object expires.
      */
     public long getExpires()
@@ -130,7 +128,7 @@ public class CachedObject implements Serializable
 
     /**
      * Set the expiration interval for the object.
-     * 
+     *
      * @param expires
      *            Expiration interval in millis ( 1 second = 1000 millis)
      */
@@ -156,7 +154,7 @@ public class CachedObject implements Serializable
 
     /**
      * Set the stale status for the object.
-     * 
+     *
      * @param stale
      *            Whether the object is stale or not.
      */
@@ -167,7 +165,7 @@ public class CachedObject implements Serializable
 
     /**
      * Get the stale status for the object.
-     * 
+     *
      * @return Whether the object is stale or not.
      */
     public synchronized boolean getStale()
@@ -177,7 +175,7 @@ public class CachedObject implements Serializable
 
     /**
      * Is the object stale?
-     * 
+     *
      * @return True if the object is stale.
      */
     public synchronized boolean isStale()

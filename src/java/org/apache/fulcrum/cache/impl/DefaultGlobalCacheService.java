@@ -23,10 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avalon.framework.activity.Disposable;
 import org.apache.avalon.framework.activity.Initializable;
@@ -48,7 +46,7 @@ import org.apache.fulcrum.cache.RefreshableCachedObject;
  * application. Since information about States doesn't change very often, you
  * could store this information in the Global Cache and decrease the overhead of
  * hitting the database everytime you need State information.
- * 
+ *
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
  * @author <a href="mailto:jon@clearink.com">Jon S. Stevens</a>
  * @author <a href="mailto:john@zenplex.com">John Thorhauer</a>
@@ -83,7 +81,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
 
     /** The cache. * */
-    protected Hashtable cache = null;
+    protected ConcurrentHashMap<String, CachedObject<?>> cache = null;
 
     /**
      * cacheCheckFrequency (default - 5 seconds)
@@ -103,7 +101,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /**
      * Get the Cache Check Frequency in milliseconds
-     * 
+     *
      * @return the time between two cache check runs in milliseconds
      */
     public long getCacheCheckFrequency()
@@ -115,7 +113,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      * Returns an item from the cache. /** Returns an item from the cache.
      * RefreshableCachedObject will be refreshed if it is expired and not
      * untouched.
-     * 
+     *
      * @param id
      *            The key of the stored object.
      * @return The object from the cache.
@@ -123,10 +121,11 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      *                when either the object is not in the cache or it has
      *                expired.
      */
-    public CachedObject getObject(String id) throws ObjectExpiredException
+    @Override
+    public <T> CachedObject<T> getObject(String id) throws ObjectExpiredException
     {
-        CachedObject obj = null;
-        obj = (CachedObject) this.cache.get(id);
+        @SuppressWarnings("unchecked")
+        CachedObject<T> obj = (CachedObject<T>) this.cache.get(id);
         if (obj == null)
         {
             // Not in the cache.
@@ -136,7 +135,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
         {
             if (obj instanceof RefreshableCachedObject)
             {
-                RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
                 if (rco.isUntouched())
                 {
                     throw new ObjectExpiredException();
@@ -157,7 +156,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
         if (obj instanceof RefreshableCachedObject)
         {
             // notify it that it's being accessed.
-            RefreshableCachedObject rco = (RefreshableCachedObject) obj;
+            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
             rco.touch();
         }
         return obj;
@@ -165,13 +164,14 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /**
      * Adds an object to the cache.
-     * 
+     *
      * @param id
      *            The key to store the object by.
      * @param o
      *            The object to cache.
      */
-    public void addObject(String id, CachedObject o)
+    @Override
+    public <T> void addObject(String id, CachedObject<T> o)
     {
         // If the cache already contains the key, remove it and add
         // the fresh one.
@@ -184,10 +184,11 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /**
      * Removes an object from the cache.
-     * 
+     *
      * @param id
      *            The String id for the object.
      */
+    @Override
     public void removeObject(String id)
     {
         this.cache.remove(id);
@@ -195,60 +196,54 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /**
      * Returns a copy of keys to objects in the cache as a list.
-     * 
+     *
      * Note that keys to expired objects are not returned.
-     * 
+     *
      * @return A List of <code>String</code>'s representing the keys to
      *         objects in the cache.
      */
-    public List getKeys()
+    @Override
+    public List<String> getKeys()
     {
-        ArrayList keys = new ArrayList(this.cache.size());
-        synchronized (this)
+        ArrayList<String> keys = new ArrayList<String>(this.cache.size());
+        for (String key : this.cache.keySet())
         {
-            for (Iterator itr = this.cache.keySet().iterator(); itr.hasNext();)
+            try
             {
-                String key = (String) itr.next();
-                try
-                {
-                    /* CachedObject obj = */getObject(key);
-                }
-                catch (ObjectExpiredException oee)
-                {
-                    // this is OK we just do not want this key
-                    continue;
-                }
-                keys.add(new String(key));
+                /* CachedObject obj = */getObject(key);
             }
+            catch (ObjectExpiredException oee)
+            {
+                // this is OK we just do not want this key
+                continue;
+            }
+            keys.add(new String(key));
         }
         return keys;
     }
 
     /**
      * Returns a copy of the non-expired CachedObjects in the cache as a list.
-     * 
+     *
      * @return A List of <code>CachedObject</code> objects held in the cache
      */
-    public List getCachedObjects()
+    @Override
+    public List<CachedObject<?>> getCachedObjects()
     {
-        ArrayList objects = new ArrayList(this.cache.size());
-        synchronized (this)
+        ArrayList<CachedObject<?>> objects = new ArrayList<CachedObject<?>>(this.cache.size());
+        for (String key : this.cache.keySet())
         {
-            for (Iterator itr = this.cache.keySet().iterator(); itr.hasNext();)
+            CachedObject<?> obj = null;
+            try
             {
-                String key = (String) itr.next();
-                CachedObject obj = null;
-                try
-                {
-                    obj = getObject(key);
-                }
-                catch (ObjectExpiredException oee)
-                {
-                    // this is OK we just do not want this object
-                    continue;
-                }
-                objects.add(obj);
+                obj = getObject(key);
             }
+            catch (ObjectExpiredException oee)
+            {
+                // this is OK we just do not want this object
+                continue;
+            }
+            objects.add(obj);
         }
         return objects;
     }
@@ -257,21 +252,22 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      * Circle through the cache and remove stale objects. Frequency is
      * determined by the cacheCheckFrequency property.
      */
+    @Override
     public void run()
     {
         while (this.continueThread)
         {
             // Sleep for amount of time set in cacheCheckFrequency -
             // default = 5 seconds.
-            try
+            synchronized (this)
             {
-                Thread.sleep(this.cacheCheckFrequency);
-            }
-            catch (InterruptedException exc)
-            {
-                if (!this.continueThread)
+                try
                 {
-                    return;
+                    wait(this.cacheCheckFrequency);
+                }
+                catch (InterruptedException exc)
+                {
+                    // to be expected
                 }
             }
 
@@ -284,48 +280,45 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      */
     public void clearCache()
     {
-        List refreshThese = new ArrayList(20);
+        List<String> refreshThese = new ArrayList<String>(20);
         // Sync on this object so that other threads do not
         // change the Hashtable while enumerating over it.
-        synchronized (this)
+        for (String key : this.cache.keySet())
         {
-            for (Enumeration e = this.cache.keys(); e.hasMoreElements();)
+            CachedObject<?> co = this.cache.get(key);
+            if (co instanceof RefreshableCachedObject)
             {
-                String key = (String) e.nextElement();
-                CachedObject co = (CachedObject) this.cache.get(key);
-                if (co instanceof RefreshableCachedObject)
-                {
-                    RefreshableCachedObject rco = (RefreshableCachedObject) co;
-                    if (rco.isUntouched())
-                    {
-                        this.cache.remove(key);
-                    }
-                    else if (rco.isStale())
-                    {
-                        // to prolong holding the lock on this object
-                        refreshThese.add(key);
-                    }
-                }
-                else if (co.isStale())
+                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) co;
+                if (rco.isUntouched())
                 {
                     this.cache.remove(key);
                 }
+                else if (rco.isStale())
+                {
+                    // to prolong holding the lock on this object
+                    refreshThese.add(key);
+                }
+            }
+            else if (co.isStale())
+            {
+                this.cache.remove(key);
             }
         }
-        for (Iterator i = refreshThese.iterator(); i.hasNext();)
+
+        for (String key : refreshThese)
         {
-            String key = (String) i.next();
-            CachedObject co = (CachedObject) this.cache.get(key);
-            RefreshableCachedObject rco = (RefreshableCachedObject) co;
+            CachedObject<?> co = this.cache.get(key);
+            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) co;
             rco.refresh();
         }
     }
 
     /**
      * Returns the number of objects currently stored in the cache
-     * 
+     *
      * @return int number of object in the cache
      */
+    @Override
     public int getNumberOfObjects()
     {
         return this.cache.size();
@@ -333,9 +326,10 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /**
      * Returns the current size of the cache.
-     * 
+     *
      * @return int representing current cache size in number of bytes
      */
+    @Override
     public int getCacheSize() throws IOException
     {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -354,22 +348,17 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     /**
      * Flush the cache of all objects.
      */
+    @Override
     public void flushCache()
     {
-        synchronized (this)
-        {
-            for (Enumeration e = this.cache.keys(); e.hasMoreElements();)
-            {
-                String key = (String) e.nextElement();
-                this.cache.remove(key);
-            }
-        }
+        this.cache.clear();
     }
 
     // ---------------- Avalon Lifecycle Methods ---------------------
     /**
      * Avalon component lifecycle method
      */
+    @Override
     public void configure(Configuration conf) throws ConfigurationException
     {
         this.cacheCheckFrequency = conf.getAttributeAsLong(
@@ -381,44 +370,31 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     /**
      * Avalon component lifecycle method
      */
+    @Override
     public void initialize() throws Exception
     {
-        try
-        {
-            this.cache = new Hashtable(this.cacheInitialSize);
-            // Start housekeeping thread.
-            this.continueThread = true;
-            this.housekeeping = new Thread(this);
-            // Indicate that this is a system thread. JVM will quit only when
-            // there are no more active user threads. Settings threads spawned
-            // internally by Turbine as daemons allows commandline applications
-            // using Turbine to terminate in an orderly manner.
-            this.housekeeping.setDaemon(true);
-            this.housekeeping.start();
-        }
-        catch (Exception e)
-        {
-            throw new Exception(
-                    "DefaultGlobalCacheService failed to initialize", e);
-        }
+        this.cache = new ConcurrentHashMap<String, CachedObject<?>>(this.cacheInitialSize);
+        // Start housekeeping thread.
+        this.continueThread = true;
+        this.housekeeping = new Thread(this);
+        // Indicate that this is a system thread. JVM will quit only when
+        // there are no more active user threads. Settings threads spawned
+        // internally by Turbine as daemons allows commandline applications
+        // using Turbine to terminate in an orderly manner.
+        this.housekeeping.setDaemon(true);
+        this.housekeeping.start();
     }
 
     /**
      * Avalon component lifecycle method
      */
+    @Override
     public void dispose()
     {
-        this.continueThread = false;
-        this.housekeeping.interrupt();
-    }
-
-    /**
-     * The name used to specify this component in TurbineResources.properties
-     * 
-     * @deprecated part of the pre-avalon compatibility layer
-     */
-    protected String getName()
-    {
-        return "GlobalCacheService";
+        synchronized (this)
+        {
+            this.continueThread = false;
+            notify();
+        }
     }
 }

@@ -22,44 +22,42 @@ package org.apache.fulcrum.cache;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.avalon.framework.component.Component;
-
 /**
  * GlobalCacheService interface.
- * 
+ *
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
  * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
  * @version $Id$
  */
-public interface GlobalCacheService extends Component
+public interface GlobalCacheService
 {
     /** Avalon role - used to id the component within the manager */
     String ROLE = GlobalCacheService.class.getName();
 
     /**
      * Gets a cached object given its id (a String).
-     * 
+     *
      * @param id
      *            The String id for the object.
      * @return A CachedObject.
      * @exception ObjectExpiredException,
      *                if the object has expired in the cache.
      */
-    CachedObject getObject(String id) throws ObjectExpiredException;
+    <T> CachedObject<T> getObject(String id) throws ObjectExpiredException;
 
     /**
      * Adds an object to the cache.
-     * 
+     *
      * @param id
      *            The String id for the object.
      * @param o
      *            The object to add to the cache.
      */
-    void addObject(String id, CachedObject o);
+    <T> void addObject(String id, CachedObject<T> o);
 
     /**
      * Removes an object from the cache.
-     * 
+     *
      * @param id
      *            The String id for the object.
      */
@@ -67,31 +65,31 @@ public interface GlobalCacheService extends Component
 
     /**
      * Returns a copy of keys to objects in the cache as a list.
-     * 
+     *
      * Note that keys to expired objects are not returned.
-     * 
+     *
      * @return A List of <code>String</code>'s representing the keys to
      *         objects in the cache.
      */
-    public List getKeys();
+    List<String> getKeys();
 
     /**
      * Returns a copy of the non-expired CachedObjects in the cache as a list.
-     * 
+     *
      * @return A List of <code>CachedObject</code> objects held in the cache
      */
-    public List getCachedObjects();
+    List<CachedObject<?>> getCachedObjects();
 
     /**
      * Returns the current size of the cache.
-     * 
+     *
      * @return int representing current cache size in number of bytes
      */
     int getCacheSize() throws IOException;
 
     /**
      * Returns the number of objects in the cache.
-     * 
+     *
      * @return int The current number of objects in the cache.
      */
     int getNumberOfObjects();
