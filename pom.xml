@@ -69,10 +69,9 @@
 	    <version>2.10.5</version>
 	</dependency>
 	<dependency>
-	    <groupId>org.apache.tomee.patch</groupId>
+	    <groupId>org.apache.commons</groupId>
 	    <artifactId>commons-jcs-core</artifactId>
-	    <version>2.0-M1</version>
-		<optional>true</optional>
+	    <version>2.2.1</version>
 	</dependency>
     <!-- testing dependencies -->
     <dependency>
