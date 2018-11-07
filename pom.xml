@@ -90,6 +90,9 @@
   </dependencies>
 
   <build>
+    <sourceDirectory>${basedir}/src/java</sourceDirectory>
+    <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
+  
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -106,25 +109,11 @@
           </additionalClasspathElements>
         </configuration>
       </plugin>
-      <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.5.1</version>
-          <configuration>
-              <source>${maven.compile.source}</source>
-              <target>${maven.compile.target}</target>
-              <encoding>${project.build.sourceEncoding}</encoding>
-          </configuration>
-      </plugin>
-      
     </plugins>
-    <sourceDirectory>${basedir}/src/java</sourceDirectory>
-    <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
   </build>
 
   <properties>
     <turbine.site.path>fulcrum/fulcrum-cache</turbine.site.path>
-    <maven.compile.source>1.8</maven.compile.source>
-    <maven.compile.target>1.8</maven.compile.target>
   </properties>
 
 	
