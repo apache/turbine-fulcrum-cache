@@ -25,21 +25,10 @@ package org.apache.fulcrum.cache;
  * JCSCacheTest
  * 
  * @author <a href="tv@apache.org">Thomas Vandahl</a>
- * @version $Id:$
+ * @version $Id$
  */
 public class JCSCacheTest extends CacheTest
 {
-    /**
-     * Defines the testcase name for JUnit.
-     * 
-     * @param name
-     *            the testcase's name.
-     */
-    public JCSCacheTest(String name)
-    {
-        super(name);
-    }
-
     /**
      * @see org.apache.fulcrum.cache.CacheTest#getCacheRoleName()
      */

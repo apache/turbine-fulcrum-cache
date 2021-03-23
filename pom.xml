@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.turbine</groupId>
     <artifactId>turbine-parent</artifactId>
-    <version>6</version>
+    <version>7</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -30,7 +30,7 @@
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
   <url>http://turbine.apache.org/fulcrum/fulcrum-cache</url>
-		
+        
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</developerConnection>
@@ -64,21 +64,41 @@
       <artifactId>avalon-framework-api</artifactId>
       <version>4.3.1</version>
     </dependency>
-	<dependency>
-	    <groupId>net.sf.ehcache</groupId>
-	    <artifactId>ehcache</artifactId>
-	    <version>2.10.5</version>
-	</dependency>
-	<dependency>
-	    <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-jcs-core</artifactId>
-	    <version>2.2.1</version>
-	</dependency>
+    <dependency>
+        <groupId>net.sf.ehcache</groupId>
+        <artifactId>ehcache</artifactId>
+        <version>2.10.6</version>
+    </dependency>
+    <!-- ehcache has api slf4j incldued -->
+     <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.7.30</version>
+        <scope>test</scope>
+    </dependency>
+     <!--dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+      <version>3.9.2</version>
+      <scope>optional</scope>
+    </dependency-->
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-jcs3-core</artifactId>
+        <version>3.0</version>
+    </dependency>
+    <!-- log optional for jcs3, required log4j2.xml and system property -Djcs.logSystem=log4j2  -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.14.1</version>
+        <scope>test</scope>
+    </dependency>
     <!-- testing dependencies -->
     <dependency>
       <groupId>org.apache.fulcrum</groupId>
       <artifactId>fulcrum-testcontainer</artifactId>
-      <version>1.0.8</version>
+      <version>1.0.9</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -92,6 +112,17 @@
   <build>
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
     <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
+    
+    <testResources>
+        <testResource>
+            <directory>src/test</directory>
+                <includes> 
+                 <include>**/*.xml</include> 
+                 <include>**/*.ccf</include>
+                  <include>**/*.properties</include>
+               </includes>
+        </testResource>
+    </testResources>
   
     <plugins>
       <plugin>
@@ -116,5 +147,5 @@
     <turbine.site.path>fulcrum/fulcrum-cache</turbine.site.path>
   </properties>
 
-	
+    
 </project>

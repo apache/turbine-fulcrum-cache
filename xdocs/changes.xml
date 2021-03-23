@@ -24,6 +24,18 @@
   </properties>
 
   <body>
+    <release version="1.1.1" date="in subversion">
+     <action type="update" dev="gk">
+        Updated JCSCacheService to jcs3, as such Java 8 is required.
+        Fix cache object mapping to maxlife in seconds from expiry milliseconds.
+      </action>
+       <action type="update" dev="gk">
+        Fixed bug in CachedObject expires assignment
+      </action>
+     <action type="update" dev="gk">
+        Test updated to Junit 5
+      </action>
+    </release>
     <release version="1.1.0" date="2010-03-31">
       <action type="update" dev="tv">
         Refactored all implementations to be in the impl-package.

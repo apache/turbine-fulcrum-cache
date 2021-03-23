@@ -20,6 +20,7 @@ package org.apache.fulcrum.cache;
  */
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Wrapper for an object you want to store in a cache for a period of time.
@@ -62,7 +63,7 @@ public class CachedObject<T> implements Serializable
     private long expires = 0;
 
     /** Is this object stale/expired? */
-    private boolean stale = false;
+    private AtomicBoolean stale = new AtomicBoolean();
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
@@ -89,10 +90,12 @@ public class CachedObject<T> implements Serializable
         if (expires == DEFAULT)
         {
             this.expires = this.defaultage;
+        } else {
+            this.expires = expires;
         }
 
         this.contents = o;
-        this.expires = expires;
+
         this.created = System.currentTimeMillis();
     }
 
@@ -158,9 +161,9 @@ public class CachedObject<T> implements Serializable
      * @param stale
      *            Whether the object is stale or not.
      */
-    public synchronized void setStale(boolean stale)
+    public void setStale(boolean stale)
     {
-        this.stale = stale;
+        this.stale.set( stale );
     }
 
     /**
@@ -168,9 +171,9 @@ public class CachedObject<T> implements Serializable
      *
      * @return Whether the object is stale or not.
      */
-    public synchronized boolean getStale()
+    public boolean getStale()
     {
-        return this.stale;
+        return this.stale.get();
     }
 
     /**
@@ -178,7 +181,7 @@ public class CachedObject<T> implements Serializable
      *
      * @return True if the object is stale.
      */
-    public synchronized boolean isStale()
+    public boolean isStale()
     {
         if (this.expires == FOREVER)
         {

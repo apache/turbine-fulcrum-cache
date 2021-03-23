@@ -23,10 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-
 import org.apache.avalon.framework.activity.Disposable;
 import org.apache.avalon.framework.activity.Initializable;
 import org.apache.avalon.framework.configuration.Configurable;
@@ -39,8 +35,12 @@ import org.apache.fulcrum.cache.GlobalCacheService;
 import org.apache.fulcrum.cache.ObjectExpiredException;
 import org.apache.fulcrum.cache.RefreshableCachedObject;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 /**
- * Default implementation of EHCacheService
+ * Default implementation of EHCacheService (Ehcache 2)
  *
  * @author <a href="mailto:epughNOSPAM@opensourceconnections.com">Eric Pugh</a>
  * @author <a href="mailto:tv@apache.org">Thomas Vandahl</a>
@@ -61,7 +61,7 @@ public class EHCacheService extends AbstractLogEnabled implements
     private long cacheCheckFrequency;
 
     /**
-     * Path name of the JCS configuration file
+     * Path name of the Ehcache configuration file
      */
     private String configFile;
 

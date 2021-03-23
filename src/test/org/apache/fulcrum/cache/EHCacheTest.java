@@ -24,20 +24,10 @@ package org.apache.fulcrum.cache;
  * EHCacheTest
  * 
  * @author <a href="tv@apache.org">Thomas Vandahl</a>
- * @version $Id:$
+ * @version $Id$
  */
 public class EHCacheTest extends CacheTest
 {
-    /**
-     * Defines the testcase name for JUnit.
-     * 
-     * @param name
-     *            the testcase's name.
-     */
-    public EHCacheTest(String name)
-    {
-        super(name);
-    }
 
     /**
      * @see org.apache.fulcrum.cache.CacheTest#getCacheRoleName()

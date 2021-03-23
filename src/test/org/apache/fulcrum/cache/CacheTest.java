@@ -19,17 +19,25 @@
 
 package org.apache.fulcrum.cache;
 
-// Cactus and Junit imports
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.avalon.framework.component.ComponentException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.fulcrum.cache.impl.DefaultGlobalCacheService;
-import org.apache.fulcrum.testcontainer.BaseUnitTest;
+import org.apache.fulcrum.testcontainer.BaseUnit5Test;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * CacheTest
@@ -39,7 +47,7 @@ import org.apache.fulcrum.testcontainer.BaseUnitTest;
  * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
  * @version $Id$
  */
-public class CacheTest extends BaseUnitTest
+public class CacheTest extends BaseUnit5Test
 {
 
     protected GlobalCacheService globalCache = null;
@@ -50,17 +58,16 @@ public class CacheTest extends BaseUnitTest
 
     public static final String SKIP_TESTS_KEY = "fulcrum.cache.skip.long.tests";
 
-    protected static final Log LOG = LogFactory.getLog(CacheTest.class);
+    protected final Logger log = LogManager.getLogger( getClass().getName() );
 
-    /**
-     * Defines the testcase name for JUnit.
-     *
-     * @param name
-     *            the testcase's name.
-     */
-    public CacheTest(String name)
-    {
-        super(name);
+    static {
+        String logSystem = System.getProperty("jcs.logSystem", null);
+        if (logSystem == null) {
+            System.setProperty("jcs.logSystem", "log4j2" );
+            System.out.println( "Setting jcs.logSystem to: log4j2");
+            logSystem = System.getProperty("jcs.logSystem", null);
+        }
+        System.out.println( "What is the value of the jcs.logSystem: "+ logSystem);
     }
 
     /**
@@ -73,21 +80,26 @@ public class CacheTest extends BaseUnitTest
         return GlobalCacheService.ROLE;
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception
     {
-        super.setUp();
-
-        try
-        {
-            this.globalCache = (GlobalCacheService) this
-                    .lookup(getCacheRoleName());
-        }
-        catch (ComponentException e)
-        {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        //if (globalCache == null) {
+            try
+            {
+                globalCache = (GlobalCacheService) this
+                        .lookup(getCacheRoleName());
+            }
+            catch (ComponentException e)
+            {
+                e.printStackTrace();
+                fail(e.getMessage());
+            }
+        //}
+    }
+    
+    @AfterEach
+    protected void cleanup() {
+        this.globalCache.removeObject(cacheKey);
     }
 
     /**
@@ -95,6 +107,7 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testSimpleAddGetCacheObject() throws Exception
     {
         String testString = "This is a test";
@@ -102,14 +115,15 @@ public class CacheTest extends BaseUnitTest
         CachedObject<String> cacheObject1 = null;
         // Create object
         cacheObject1 = new CachedObject<String>(testString);
-        assertNotNull("Failed to create a cachable object 1", cacheObject1);
+        assertNotNull(cacheObject1, "Failed to create a cachable object 1" );
         // Add object to cache
         this.globalCache.addObject(cacheKey, cacheObject1);
         // Get object from cache
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieve a cached object 1", retrievedObject);
-        assertSame("Did not retrieve a correct, expected cached object 1",
-                retrievedObject, cacheObject1);
+        assertNotNull( retrievedObject, "Did not retrieve a cached object 1");
+        assertSame(
+                retrievedObject, cacheObject1,
+                "Did not retrieve a correct, expected cached object 1");
         // Remove object from cache
         this.globalCache.removeObject(cacheKey);
         // Verify object removed from cache
@@ -119,17 +133,20 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
             assertNull(
-                    "Retrieved the deleted cached object 1 and did not get expected ObjectExpiredException",
-                    retrievedObject);
+                    retrievedObject,
+                    "Retrieved the deleted cached object 1 and did not get expected ObjectExpiredException"
+                    );
             assertNotNull(
-                    "Did not get expected ObjectExpiredException retrieving a deleted object",
-                    retrievedObject);
+                    retrievedObject,
+                    "Did not get expected ObjectExpiredException retrieving a deleted object"
+                    );
         }
         catch (ObjectExpiredException e)
         {
             assertNull(
-                    "Retrieved the deleted cached object 1, but caught expected ObjectExpiredException exception",
-                    retrievedObject);
+                    retrievedObject,
+                    "Retrieved the deleted cached object 1, but caught expected ObjectExpiredException exception"
+                    );
         }
         // Remove object from cache that does NOT exist in the cache
         this.globalCache.removeObject(cacheKey);
@@ -140,6 +157,7 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void test2ObjectAddGetCachedObject() throws Exception
     {
         String testString = "This is a test";
@@ -148,38 +166,45 @@ public class CacheTest extends BaseUnitTest
         CachedObject<String> cacheObject2 = null;
         // Create and add Object #1
         cacheObject1 = new CachedObject<String>(testString);
-        assertNotNull("Failed to create a cachable object 1", cacheObject1);
+        assertNotNull(cacheObject1, "Failed to create a cachable object 1" );
         this.globalCache.addObject(cacheKey, cacheObject1);
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieve a cached object 1", retrievedObject);
-        assertEquals("Did not retrieve correct cached object", cacheObject1,
-                retrievedObject);
+        assertNotNull( retrievedObject, "Did not retrieve a cached object 1");
+        assertEquals(cacheObject1,
+                retrievedObject, "Did not retrieve correct cached object");
         // Create and add Object #2
         cacheObject2 = new CachedObject<String>(testString);
-        assertNotNull("Failed to create a cachable object 2", cacheObject2);
+        assertNotNull(cacheObject2, "Failed to create a cachable object 2");
         this.globalCache.addObject(cacheKey_2, cacheObject2);
         retrievedObject = this.globalCache.getObject(cacheKey_2);
-        assertNotNull("Did not retrieve a cached object 2", retrievedObject);
-        assertEquals("Did not retrieve correct cached object 2", cacheObject2,
-                retrievedObject);
+        assertNotNull(retrievedObject, "Did not retrieve a cached object 2");
+        assertEquals( cacheObject2,
+                retrievedObject,
+                "Did not retrieve correct cached object 2");
         // Get object #1
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieve a cached object 1. Attempt #2",
-                retrievedObject);
-        assertEquals("Did not retrieve correct cached object 1. Attempt #2",
-                cacheObject1, retrievedObject);
+        assertNotNull(
+                retrievedObject,
+                "Did not retrieve a cached object 1. Attempt #2");
+        assertEquals(
+                cacheObject1, retrievedObject,
+                "Did not retrieve correct cached object 1. Attempt #2");
         // Get object #1
         retrievedObject = this.globalCache.getObject(cacheKey);
-        assertNotNull("Did not retrieve a cached object 1. Attempt #3",
-                retrievedObject);
-        assertEquals("Did not retrieve correct cached object 1. Attempt #3",
-                cacheObject1, retrievedObject);
+        assertNotNull(
+                retrievedObject,
+                "Did not retrieve a cached object 1. Attempt #3");
+        assertEquals(
+                cacheObject1, retrievedObject,
+                "Did not retrieve correct cached object 1. Attempt #3");
         // Get object #2
         retrievedObject = this.globalCache.getObject(cacheKey_2);
-        assertNotNull("Did not retrieve a cached object 2. Attempt #2",
-                retrievedObject);
-        assertEquals("Did not retrieve correct cached object 2 Attempt #2",
-                cacheObject2, retrievedObject);
+        assertNotNull(
+                retrievedObject,
+                "Did not retrieve a cached object 2. Attempt #2");
+        assertEquals(
+                cacheObject2, retrievedObject,
+                "Did not retrieve correct cached object 2 Attempt #2");
         // Remove objects
         this.globalCache.removeObject(cacheKey);
         this.globalCache.removeObject(cacheKey_2);
@@ -191,6 +216,7 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testObjectExpiration() throws Exception
     {
         String testString = "This is a test";
@@ -198,22 +224,22 @@ public class CacheTest extends BaseUnitTest
         CachedObject<String> cacheObject = null;
         // Create and add Object that expires in 1000 millis (1 second)
         cacheObject = new CachedObject<String>(testString, 1000);
-        assertNotNull("Failed to create a cachable object", cacheObject);
+        assertNotNull(cacheObject, "Failed to create a cachable object");
         long addTime = System.currentTimeMillis();
         this.globalCache.addObject(cacheKey, cacheObject);
         // Try to get un-expired object
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieve a cached object", retrievedObject);
-            assertEquals("Did not retrieve correct cached object",
-                    cacheObject, retrievedObject);
+            assertNotNull( retrievedObject, "Did not retrieve a cached object");
+            assertEquals(
+                    cacheObject, retrievedObject,
+                    "Did not retrieve correct cached object");
         }
         catch (ObjectExpiredException e)
         {
-            assertTrue("Object expired early ( "
-                    + (System.currentTimeMillis() - addTime) + " millis)",
-                    false);
+            assertTrue(false, "Object expired early ( "
+                    + (System.currentTimeMillis() - addTime) + " millis)");
         }
         // Sleep 1500 Millis (1.5 seconds)
         Thread.sleep(1500);
@@ -222,18 +248,18 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = null;
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNull(
-                    "Retrieved the expired cached object  and did not get expected ObjectExpiredException",
-                    retrievedObject);
-            assertNotNull(
-                    "Did not get expected ObjectExpiredException retrieving an expired object",
-                    retrievedObject);
+            assertNull(retrievedObject,
+                    "Retrieved the expired cached object  and did not get expected ObjectExpiredException"
+                    );
+            assertNotNull(retrievedObject,
+                    "Did not get expected ObjectExpiredException retrieving an expired object"
+                    );
         }
         catch (ObjectExpiredException e)
         {
-            assertNull(
-                    "Retrieved the expired cached object, but caught expected ObjectExpiredException exception",
-                    retrievedObject);
+            assertNull(retrievedObject,
+                    "Retrieved the expired cached object, but caught expected ObjectExpiredException exception"
+                    );
         }
         // Remove objects
         this.globalCache.removeObject(cacheKey);
@@ -246,23 +272,26 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testCacheFlush() throws Exception
     {
         String testString = "This is a test";
         CachedObject<String> cacheObject = null;
         // Create and add Object that expires in 1 turbine Refresh + 1 millis
         cacheObject = new CachedObject<String>(testString, (getCacheRefresh() * 5) + 1);
-        assertNotNull("Failed to create a cachable object", cacheObject);
+        assertNotNull( cacheObject, "Failed to create a cachable object");
         this.globalCache.addObject(cacheKey, cacheObject);
         // 1 Refresh
         Thread.sleep(getCacheRefresh() + 1);
-        assertTrue("No object in cache before flush", (0 < this.globalCache
-                .getNumberOfObjects()));
+        assertTrue( (0 < this.globalCache
+                .getNumberOfObjects()),
+                "No object in cache before flush");
         // Flush Cache
         this.globalCache.flushCache();
         // Wait 15 seconds, 3 Refresh
         Thread.sleep((getCacheRefresh() * 2) + 1);
-        assertEquals("After refresh", 0, this.globalCache.getNumberOfObjects());
+        assertEquals( 0, this.globalCache.getNumberOfObjects(),
+                "After refresh");
         // Remove objects
         this.globalCache.removeObject(cacheKey);
     }
@@ -272,32 +301,38 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testObjectCount() throws Exception
     {
-        assertNotNull("Could not retrieve cache service.", this.globalCache);
+        assertNotNull(this.globalCache, "Could not retrieve cache service.");
 
         long cacheRefresh = getCacheRefresh();
 
         // Create and add Object that expires in 1.5 turbine Refresh
         long expireTime = cacheRefresh + cacheRefresh / 2;
+        log.info( "set expireTime in ms: {}", expireTime );
 
         CachedObject<String> cacheObject = new CachedObject<String>("This is a test",
                 expireTime);
-        assertNotNull("Failed to create a cachable object", cacheObject);
+        assertNotNull( cacheObject, "Failed to create a cachable object");
 
         this.globalCache.addObject(cacheKey, cacheObject);
-        assertEquals("After adding 1 Object", 1, this.globalCache
-                .getNumberOfObjects());
+        assertEquals( 1, this.globalCache
+                .getNumberOfObjects(),
+                "After adding 1 Object");
 
         // Wait until we're passed 1 refresh, but not half way.
         Thread.sleep(cacheRefresh + cacheRefresh / 3);
-        assertEquals("After one refresh", 1, this.globalCache
-                .getNumberOfObjects());
+        assertEquals( 1, this.globalCache
+                .getNumberOfObjects(),
+                "After one refresh");
 
         // Wait until we're passed 2 more refreshes
         Thread.sleep((cacheRefresh * 2) + cacheRefresh / 3);
-        assertEquals("After three refreshes", 0, this.globalCache
-                .getNumberOfObjects());
+        
+        assertEquals(0, this.globalCache
+                .getNumberOfObjects(),
+                "After three refreshes");
     }
 
     /**
@@ -309,6 +344,7 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testRefreshableObject() throws Exception
     {
         CachedObject<RefreshableObject> retrievedObject = null;
@@ -316,22 +352,23 @@ public class CacheTest extends BaseUnitTest
         // Create and add Object that expires in TEST_EXPIRETIME millis.
         cacheObject = new RefreshableCachedObject<RefreshableObject>(new RefreshableObject(),
                 getTestExpireTime());
-        assertNotNull("Failed to create a cachable object", cacheObject);
+        assertNotNull( cacheObject, "Failed to create a cachable object");
         long addTime = System.currentTimeMillis();
         this.globalCache.addObject(cacheKey, cacheObject);
         // Try to get un-expired object
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieve a cached object", retrievedObject);
-            assertEquals("Did not retrieve correct cached object",
-                    cacheObject, retrievedObject);
+            assertNotNull(retrievedObject, "Did not retrieve a cached object");
+            assertEquals(
+                    cacheObject, retrievedObject,
+                    "Did not retrieve correct cached object");
         }
         catch (ObjectExpiredException e)
         {
-            assertTrue("Object expired early ( "
-                    + (System.currentTimeMillis() - addTime) + " millis)",
-                    false);
+            assertTrue(false, "Object expired early ( "
+                    + (System.currentTimeMillis() - addTime) + " millis)"
+                    );
         }
         // Wait 1 Turbine cache refresh + 1 second.
         Thread.sleep(getTestExpireTime() + 1000);
@@ -340,21 +377,23 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = null;
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieve a cached object, after sleep",
-                    retrievedObject);
-            assertNotNull("Cached object has no contents, after sleep.",
-                    ((RefreshableCachedObject<?>) retrievedObject).getContents());
+            assertNotNull(
+                    retrievedObject, "Did not retrieve a cached object, after sleep");
+            assertNotNull(
+                    ((RefreshableCachedObject<?>) retrievedObject).getContents(),
+                    "Cached object has no contents, after sleep.");
             assertTrue(
-                    "Object did not refresh.",
+                   
                     (((RefreshableCachedObject<RefreshableObject>) retrievedObject)
-                            .getContents().getRefreshCount() > 0));
+                            .getContents().getRefreshCount() > 0),
+                    "Object did not refresh.");
         }
         catch (ObjectExpiredException e)
         {
-            assertTrue("Received unexpected ObjectExpiredException exception "
+            assertTrue(false, "Received unexpected ObjectExpiredException exception "
                     + "when retrieving refreshable object after ( "
-                    + (System.currentTimeMillis() - addTime) + " millis)",
-                    false);
+                    + (System.currentTimeMillis() - addTime) + " millis)"
+                    );
         }
         // See if object will expires (testing every second for 100 seconds. It
         // should not!
@@ -366,23 +405,25 @@ public class CacheTest extends BaseUnitTest
             {
                 retrievedObject = null;
                 retrievedObject = this.globalCache.getObject(cacheKey);
-                assertNotNull("Did not retrieve a cached object, after sleep",
-                        retrievedObject);
-                assertNotNull("Cached object has no contents, after sleep.",
+                assertNotNull(retrievedObject,
+                        "Did not retrieve a cached object, after sleep");
+                assertNotNull(
                         ((RefreshableCachedObject<?>) retrievedObject)
-                                .getContents());
+                                .getContents(),
+                                "Cached object has no contents, after sleep.");
                 assertTrue(
-                        "Object did not refresh.",
+                        
                         (((RefreshableCachedObject<RefreshableObject>) retrievedObject)
-                                .getContents().getRefreshCount() > 0));
+                                .getContents().getRefreshCount() > 0),
+                        "Object did not refresh.");
             }
             catch (ObjectExpiredException e)
             {
-                assertTrue(
+                assertTrue(false,
                         "Received unexpected ObjectExpiredException exception "
                                 + "when retrieving refreshable object after ( "
                                 + (System.currentTimeMillis() - addTime)
-                                + " millis)", false);
+                                + " millis)");
             }
         }
         // Remove objects
@@ -397,20 +438,21 @@ public class CacheTest extends BaseUnitTest
      *
      * @throws Exception
      */
+    @Test
     public void testRefreshableTimeToLive() throws Exception
     {
         String skipTestsProperty = System.getProperty(SKIP_TESTS_KEY, "false");
-        LOG.info("What is the value of the skipTestsProperty:"
+        log.info("What is the value of the skipTestsProperty: "
                 + skipTestsProperty);
         if (Boolean.valueOf(skipTestsProperty).booleanValue())
         {
-            LOG.warn("Skipping testRefreshableTimeToLive test due to property "
+            log.warn("Skipping testRefreshableTimeToLive test due to property "
                     + SKIP_TESTS_KEY + " being true.");
             return;
         }
         else
         {
-            LOG.warn("Running testRefreshableTimeToLive test due to property "
+            log.warn("Running testRefreshableTimeToLive test due to property "
                     + SKIP_TESTS_KEY + " being false.");
         }
 
@@ -419,11 +461,12 @@ public class CacheTest extends BaseUnitTest
         // Create and add Object that expires in TEST_EXPIRETIME millis.
         cacheObject = new RefreshableCachedObject<RefreshableObject>(new RefreshableObject(),
                 getTestExpireTime());
-        assertNotNull("Failed to create a cachable object", cacheObject);
+        assertNotNull(cacheObject, "Failed to create a cachable object");
         cacheObject.setTTL(getTestExpireTime());
         // Verify TimeToLive was set
-        assertEquals("Returned TimeToLive", getTestExpireTime(), cacheObject
-                .getTTL());
+        assertEquals(getTestExpireTime(), cacheObject
+                .getTTL(),
+                "Returned TimeToLive");
         // Add object to Cache
         this.globalCache.addObject(cacheKey, cacheObject);
         long addTime = System.currentTimeMillis();
@@ -431,9 +474,10 @@ public class CacheTest extends BaseUnitTest
         try
         {
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieve a cached object", retrievedObject);
-            assertEquals("Did not retrieve correct cached object",
-                    cacheObject, retrievedObject);
+            assertNotNull(retrievedObject, "Did not retrieve a cached object");
+            assertEquals(
+                    cacheObject, retrievedObject,
+                    "Did not retrieve correct cached object");
         }
         catch (ObjectExpiredException e)
         {
@@ -448,10 +492,11 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = null;
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNotNull("Did not retrieve a cached object, after sleep",
-                    retrievedObject);
-            assertNotNull("Cached object has no contents, after sleep.",
-                    ((RefreshableCachedObject<?>) retrievedObject).getContents());
+            assertNotNull(retrievedObject,
+                    "Did not retrieve a cached object, after sleep");
+            assertNotNull(
+                    ((RefreshableCachedObject<?>) retrievedObject).getContents(),
+                    "Cached object has no contents, after sleep.");
             /*
              * @todo this is not working for some reason
              *
@@ -462,10 +507,9 @@ public class CacheTest extends BaseUnitTest
         }
         catch (ObjectExpiredException e)
         {
-            assertTrue("Received unexpected ObjectExpiredException exception "
+            assertTrue(false, "Received unexpected ObjectExpiredException exception "
                     + "when retrieving refreshable object after ( "
-                    + (System.currentTimeMillis() - addTime) + " millis)",
-                    false);
+                    + (System.currentTimeMillis() - addTime) + " millis)");
         }
         // Wait long enough to allow object to expire and exceed TTL
         Thread.sleep(getTestExpireTime() + 5000);
@@ -474,15 +518,16 @@ public class CacheTest extends BaseUnitTest
         {
             retrievedObject = null;
             retrievedObject = this.globalCache.getObject(cacheKey);
-            assertNull("Retrieved a cached object, after exceeding TimeToLive",
-                    retrievedObject);
+            assertNull(retrievedObject, "Retrieved a cached object, after exceeding TimeToLive"
+                    );
         }
         catch (ObjectExpiredException e)
         {
-            assertNull(
-                    "Retrieved the expired cached object, but caught expected ObjectExpiredException exception",
-                    retrievedObject);
+            assertNull(retrievedObject,
+                    "Retrieved the expired cached object, but caught expected ObjectExpiredException exception");
         }
+        // Remove objects
+        this.globalCache.removeObject(cacheKey);
     }
 
     /**
@@ -490,19 +535,22 @@ public class CacheTest extends BaseUnitTest
      *
      * @return
      */
+    @Test
     public void testCacheGetKeyList()
     {
         this.globalCache.flushCache();
         this.globalCache.addObject("date1", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date2", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date3", new CachedObject<Date>(new Date()));
-        assertTrue("Did not get key list back.",
-                (this.globalCache.getKeys() != null));
+        assertTrue(
+                (this.globalCache.getKeys() != null),
+                "Did not get key list back.");
         List<String> keys = this.globalCache.getKeys();
         for (String key : keys)
         {
-            assertTrue("Key was not an instance of String.",
-                    (key instanceof String));
+            assertTrue(
+                    (key instanceof String),
+                    "Key was not an instance of String.");
         }
 
     }
@@ -512,20 +560,23 @@ public class CacheTest extends BaseUnitTest
      *
      * @return
      */
+    @Test
     public void testCacheGetCachedObjects()
     {
         this.globalCache.flushCache();
         this.globalCache.addObject("date1", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date2", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date3", new CachedObject<Date>(new Date()));
-        assertTrue("Did not get object list back.", (this.globalCache
-                .getCachedObjects() != null));
+        assertTrue((this.globalCache
+                .getCachedObjects() != null),
+                "Did not get object list back.");
         List<CachedObject<?>> objects = this.globalCache.getCachedObjects();
         for (CachedObject<?> obj : objects)
         {
-            assertNotNull("Object was null.", obj);
-            assertTrue("Object was not an instance of CachedObject",
-                    (obj instanceof CachedObject));
+            assertNotNull(obj, "Object was null.");
+            assertTrue(
+                    (obj instanceof CachedObject),
+                    "Object was not an instance of CachedObject");
         }
 
     }
@@ -537,14 +588,16 @@ public class CacheTest extends BaseUnitTest
      *
      * @return
      */
+    @Test
     public void testCacheModification()
     {
         this.globalCache.flushCache();
         this.globalCache.addObject("date1", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date2", new CachedObject<Date>(new Date()));
         this.globalCache.addObject("date3", new CachedObject<Date>(new Date()));
-        assertTrue("Did not get key list back.",
-                (this.globalCache.getKeys() != null));
+        assertTrue(
+                (this.globalCache.getKeys() != null),
+                "Did not get key list back.");
         List<String> keys = this.globalCache.getKeys();
         try
         {

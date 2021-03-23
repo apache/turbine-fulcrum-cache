@@ -24,6 +24,7 @@
     <title>Cache Component</title>
     <author email="epugh@upstate.com">Eric Pugh</author>
     <author email="tv@apache.org">Thomas Vandahl</author>
+    <author email="gk@apache.org">Georg Kallidis</author>
   </properties>
 
   <body>
@@ -45,7 +46,7 @@
       	<li>GlobalCacheService,</li>
       	<li>EHCacheService (built on the EHCache project from
       		<a href="http://ehcache.sourceforge.net/">ehcache.sourceforge.net</a>) and</li>
-      	<li>JCSCacheService (built on the <a href="http://jakarta.apache.org/jcs/">Java Caching System</a>,
+      	<li>JCSCacheService (built on the <a href="http://commons.apache.org/proper/commons-jcs/">Java Caching System</a>,
       		which was originally a part of Turbine)</li>
       </ul>
     </p>
@@ -148,8 +149,8 @@
           </td>
         </tr>
       </table>
-      <p>
-        See <a href="http://jakarta.apache.org/jcs/">the JCS site</a> for more 
+      <p>z
+        See <a href="http://commons.apache.org/proper/commons-jcs/">the JCS site</a> for more 
         information about configuring JCS.
       </p>
     </subsection>

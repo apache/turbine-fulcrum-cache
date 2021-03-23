@@ -34,11 +34,11 @@ import org.apache.avalon.framework.configuration.Configuration;
 import org.apache.avalon.framework.configuration.ConfigurationException;
 import org.apache.avalon.framework.logger.AbstractLogEnabled;
 import org.apache.avalon.framework.thread.ThreadSafe;
-import org.apache.commons.jcs.JCS;
-import org.apache.commons.jcs.access.GroupCacheAccess;
-import org.apache.commons.jcs.access.exception.CacheException;
-import org.apache.commons.jcs.engine.ElementAttributes;
-import org.apache.commons.jcs.engine.control.CompositeCacheManager;
+import org.apache.commons.jcs3.JCS;
+import org.apache.commons.jcs3.access.GroupCacheAccess;
+import org.apache.commons.jcs3.access.exception.CacheException;
+import org.apache.commons.jcs3.engine.ElementAttributes;
+import org.apache.commons.jcs3.engine.control.CompositeCacheManager;
 import org.apache.fulcrum.cache.CachedObject;
 import org.apache.fulcrum.cache.GlobalCacheService;
 import org.apache.fulcrum.cache.ObjectExpiredException;
@@ -48,7 +48,7 @@ import org.apache.fulcrum.cache.RefreshableCachedObject;
  * Default implementation of JCSCacheService
  *
  * @author <a href="mailto:tv@apache.org">Thomas Vandahl</a>
- * @version $Id:$
+ * @version $Id$
  */
 public class JCSCacheService extends AbstractLogEnabled implements
         GlobalCacheService, Runnable, Configurable, Disposable, Initializable,
@@ -227,7 +227,10 @@ public class JCSCacheService extends AbstractLogEnabled implements
             else
             {
                 attrib.setIsEternal(false);
-                attrib.setMaxLife(o.getExpires() + 500);
+                // expires in millis, maxlife in seconds
+                double tmp0 = (o.getExpires() + 500) / 1000;
+                getLogger().debug( "setting maxlife seconds (minimum 1sec) from expiry + 0.5s: " + (int)tmp0 );
+                attrib.setMaxLife(  (tmp0 > 0 ? (int) Math.floor( tmp0 ) : 1 ) );
             }
 
             attrib.setLastAccessTimeNow();
