@@ -39,9 +39,12 @@
        <Logger name="net.sf.ehcache" level="debug" additivity="false">
           <AppenderRef ref="fulcrum-cache"/>
        </Logger>
-      <Root level="error">
+       <Logger name="org.apache.fulcrum.yaafi" level="debug" additivity="false">
+          <AppenderRef ref="avalon"/>
+       </Logger>
+      <Root level="warn">
           <AppenderRef ref="console"/>
-          <AppenderRef ref="fulcrum"/>
+          <AppenderRef ref="fulcrum-cache"/>
       </Root>
     </Loggers>
 </Configuration>

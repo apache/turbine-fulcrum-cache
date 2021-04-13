@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.turbine</groupId>
     <artifactId>turbine-parent</artifactId>
-    <version>7</version>
+    <version>8-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -129,12 +129,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <systemProperties>
-            <property>
-              <name>fulcrum.cache.skip.long.tests</name>
-              <value>true</value>
-            </property>
-          </systemProperties>
+          <excludedGroups>LongRunning</excludedGroups>
           <additionalClasspathElements>
             <additionalClasspathElement>${basedir}/src/test</additionalClasspathElement>
           </additionalClasspathElements>

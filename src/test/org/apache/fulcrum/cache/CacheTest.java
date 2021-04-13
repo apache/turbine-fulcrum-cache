@@ -37,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -56,18 +57,17 @@ public class CacheTest extends BaseUnit5Test
 
     protected static final String cacheKey_2 = "CacheKey_2";
 
-    public static final String SKIP_TESTS_KEY = "fulcrum.cache.skip.long.tests";
-
-    protected final Logger log = LogManager.getLogger( getClass().getName() );
+    protected static final Logger log = LogManager.getLogger( CacheTest.class );
 
     static {
         String logSystem = System.getProperty("jcs.logSystem", null);
         if (logSystem == null) {
             System.setProperty("jcs.logSystem", "log4j2" );
-            System.out.println( "Setting jcs.logSystem to: log4j2");
+            log.info( "Setting jcs.logSystem to: log4j2");
             logSystem = System.getProperty("jcs.logSystem", null);
         }
-        System.out.println( "What is the value of the jcs.logSystem: "+ logSystem);
+        log.warn( "What is the value of the jcs.logSystem: "+ logSystem);
+        
     }
 
     /**
@@ -83,6 +83,7 @@ public class CacheTest extends BaseUnit5Test
     @BeforeEach
     protected void setUp() throws Exception
     {
+        System.out.println( "Testing service: "+ getClass().getName() + "for "+ getCacheRoleName());
         //if (globalCache == null) {
             try
             {
@@ -344,6 +345,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * @throws Exception
      */
+    @Tag("LongRunning")
     @Test
     public void testRefreshableObject() throws Exception
     {
@@ -438,24 +440,10 @@ public class CacheTest extends BaseUnit5Test
      *
      * @throws Exception
      */
+    @Tag("LongRunning")
     @Test
     public void testRefreshableTimeToLive() throws Exception
     {
-        String skipTestsProperty = System.getProperty(SKIP_TESTS_KEY, "false");
-        log.info("What is the value of the skipTestsProperty: "
-                + skipTestsProperty);
-        if (Boolean.valueOf(skipTestsProperty).booleanValue())
-        {
-            log.warn("Skipping testRefreshableTimeToLive test due to property "
-                    + SKIP_TESTS_KEY + " being true.");
-            return;
-        }
-        else
-        {
-            log.warn("Running testRefreshableTimeToLive test due to property "
-                    + SKIP_TESTS_KEY + " being false.");
-        }
-
         CachedObject<RefreshableObject> retrievedObject = null;
         RefreshableCachedObject<RefreshableObject>  cacheObject = null;
         // Create and add Object that expires in TEST_EXPIRETIME millis.
