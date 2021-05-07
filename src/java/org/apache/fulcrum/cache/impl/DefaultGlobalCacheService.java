@@ -60,7 +60,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
         ThreadSafe
 {
     /**
-     * Initial size of hash table Value must be > 0. Default = 20
+     * Initial size of hash table Value must be &gt; 0. Default = 20
      */
     public static final int DEFAULT_INITIAL_CACHE_SIZE = 20;
 
@@ -75,7 +75,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     public static final String CACHE_CHECK_FREQUENCY = "cacheCheckFrequency";
 
     /**
-     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be >
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be &gt;
      * 0. Default = 5 seconds
      */
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
@@ -217,7 +217,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
                 // this is OK we just do not want this key
                 continue;
             }
-            keys.add(new String(key));
+            keys.add(key);
         }
         return keys;
     }

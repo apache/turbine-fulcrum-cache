@@ -30,6 +30,14 @@
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
   <url>http://turbine.apache.org/fulcrum/fulcrum-cache</url>
+  
+    <!-- Required for staging to work -->
+    <distributionManagement>
+        <site>
+            <id>turbine.apache.org</id>
+            <url>https://turbine.apache.org/fulcrum/fulcrum-cache/</url>
+        </site>
+    </distributionManagement>
         
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
@@ -67,7 +75,7 @@
     <dependency>
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache</artifactId>
-        <version>2.10.6</version>
+        <version>2.10.9.2</version>
     </dependency>
     <!-- ehcache has api slf4j incldued -->
      <dependency>
@@ -140,6 +148,7 @@
 
   <properties>
     <turbine.site.path>fulcrum/fulcrum-cache</turbine.site.path>
+    <turbine.scmPubCheckoutDirectory>${turbine.site.cache}/fulcrum/cache</turbine.scmPubCheckoutDirectory>
   </properties>
 
     

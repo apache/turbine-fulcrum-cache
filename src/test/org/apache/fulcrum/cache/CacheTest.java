@@ -521,7 +521,6 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Test that we can get a list of the keys in the cache
      *
-     * @return
      */
     @Test
     public void testCacheGetKeyList()
@@ -545,8 +544,6 @@ public class CacheTest extends BaseUnit5Test
 
     /**
      * Test that we can get a list of the keys in the cache
-     *
-     * @return
      */
     @Test
     public void testCacheGetCachedObjects()
@@ -574,7 +571,6 @@ public class CacheTest extends BaseUnit5Test
      * ConcurrentModificationException's being thrown if the cache is updated
      * while we are iterating over the List.
      *
-     * @return
      */
     @Test
     public void testCacheModification()

@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+<document>
+  <properties>
+    <title>Fulcrum Cache</title>
+    <author email="epugh@opensourceconnections.com">Eric Pugh</author>
+  </properties>
+
+  <body>
+    <release version="1.1.1" date="in subversion">
+     <action dev="gk" type="update">
+        - Test: Use tags to skip long running tests, minor fixes in log4j2 configuration and test assertion.
+        - Update tests to JUnit 5 and dependencies to Fulcrum Testcontainer 1.0.9 and Turbine Parent 8
+        -  Updated EHCache to v2.10.9.2
+       </action>
+       <action dev="gk" type="update">
+         Update JCS to commons-jcs3-core
+       </action>
+       <action dev="gk" type="update">
+         - Updated JCSCacheService to jcs3, as such Java 8 is required.
+         - Add logging configuration for EHcache and JCS
+      </action>
+     <action type="fix" dev="gk">
+        Fix JCS cache object mapping to maxlife in seconds from expiry milliseconds.
+      </action>
+       <action type="fix" dev="gk">
+        Fixed bug in CachedObject expires assignment, use AtomicInteger instead of synchronized stale
+      </action>
+     <action type="update" dev="gk">
+        Tests updated to Junit 5
+      </action>
+       <action dev="painter" type="update">
+         - Update to use release 1.0.8 of yaafi and testcontainer
+         - Updated EHCache
+       </action>
+       <action dev="tv" type="update">
+         - Generify
+         - Update ehcache dependency to 2.9.0
+         - Update to commons-jcs-2.0-beta1
+         - Replace viewcvs with viewvc. Fixes TRB-95
+       </action>
+    </release>
+    <release version="1.1.0" date="2010-03-31">
+      <action type="update" dev="tv">
+        Refactored all implementations to be in the impl-package.
+      </action>
+      <action type="update" dev="tv">
+        Added a EHCache based implementation of the GlobalCacheService interface.
+      </action>
+      <action type="update" dev="sgoeschl" date="2010-03-22">
+        Pulling in commons-logging-1.1.1 to avoid the 1.1 version
+        which depends on an outdated Avalon framework
+      </action>
+      <action type="update" dev="sgoeschl" date="2010-03-18">
+        Updating the M2 build.
+      </action>
+      <action type="update" dev="sgoeschl">
+        Improved maven-1.1 build (default goal now in project.xml)
+      </action>
+      <action type="add" dev="sgoeschl">
+        Added M2 build but it is still a bit rough
+      </action>
+      <action type="update" dev="seade" issue="TRB-17" due-to="Thomas Vandahl">
+        Added new JCSCacheService.  Thanks to Thomas Vandahl.
+      </action>
+     <action dev="epugh" type="add">
+        Add new EHCacheService based on EHCache from http://ehcache.sourceforge.net/
+      </action>
+    </release>
+    <release version="1.0.5" date="2004-11-24">
+     <action dev="epugh" type="remove">
+        Remove CacheServiceFacade.  It was a code smell.
+      </action>
+     <action dev="epugh" type="update">
+        Make long running tests optional.  They often fail for random reasons.
+      </action>
+     <action dev="epugh" type="update">
+        Remove extra dependencies.
+      </action>
+      <action dev="epugh" type="add">
+		Added patch from Peter Courcoux adding new methods,
+		getKeys() and getCachedObjects() together with
+		associated unit tests.
+      </action>
+    </release>
+    <release version="1.0-alpha-3" date="">
+     <action dev="epugh" type="add">
+        Added CacheServiceFacade class.
+      </action>
+      <action dev="epugh" type="add">
+        Integrated howto documentation on main page.
+      </action>
+    </release>
+
+  </body>
+</document>
+

@@ -50,7 +50,7 @@ public class EHCacheService extends AbstractLogEnabled implements
         GlobalCacheService, Runnable, Configurable, Disposable, Initializable, ThreadSafe
 {
     /**
-     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be >
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be &gt;
      * 0. Default = 5 seconds
      */
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds

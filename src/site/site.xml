@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
  Licensed to the Apache Software Foundation (ASF) under one
  or more contributor license agreements.  See the NOTICE file
@@ -17,29 +17,35 @@
  specific language governing permissions and limitations
  under the License.
 -->
-
-<!DOCTYPE project [
-<!ENTITY site-nav SYSTEM "../../incl_site_nav.xml">
-]>
-
-<project
-  name="Fulcrum Cache"
-  href="http://turbine.apache.org/fulcrum/fulcrum-cache/">
-
+<project xmlns="http://maven.apache.org/DECORATION/1.4.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.4.0 http://maven.apache.org/xsd/decoration-1.4.0.xsd"
+  name="Fulcrum Cache">
+  
+  
+    <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.8</version>
+  </skin>
   <body>
-
-    &site-nav;
-
-    <menu name="Overview">
+  
+   <menu name="Overview">
       <item name="Main" href="/index.html"/>
     </menu>
 
     <menu name="Links">
       <item name="EHCache"
-            href="http://ehcache.sourceforge.net/"/>
+            href="https://www.ehcache.org/"/>
       <item name="JCS"
-            href="http://jakarta.apache.org/jcs/"/>
+            href="https://commons.apache.org/proper/commons-jcs/"/>
     </menu>
-
+      
   </body>
+  <custom>
+      <fluidoSkin>
+        <topBarEnabled>false</topBarEnabled>
+        <sideBarEnabled>true</sideBarEnabled>
+      </fluidoSkin>
+  </custom>
 </project>

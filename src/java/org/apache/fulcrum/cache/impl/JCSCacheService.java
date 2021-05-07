@@ -55,7 +55,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
         ThreadSafe
 {
     /**
-     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be >
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be &gt;
      * 0. Default = 5 seconds
      */
     public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
@@ -228,7 +228,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
             {
                 attrib.setIsEternal(false);
                 // expires in millis, maxlife in seconds
-                double tmp0 = (o.getExpires() + 500) / 1000;
+                double tmp0 = ((double) (o.getExpires() + 500)) / 1000;
                 getLogger().debug( "setting maxlife seconds (minimum 1sec) from expiry + 0.5s: " + (int)tmp0 );
                 attrib.setMaxLife(  (tmp0 > 0 ? (int) Math.floor( tmp0 ) : 1 ) );
             }

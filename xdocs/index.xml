@@ -45,7 +45,7 @@
       <ul>
       	<li>GlobalCacheService,</li>
       	<li>EHCacheService (built on the EHCache project from
-      		<a href="http://ehcache.sourceforge.net/">ehcache.sourceforge.net</a>) and</li>
+      		<a href="https://www.ehcache.org/">ehcache.sourceforge.net</a>, N.B. The implementation is still based on last release 2.10.9.2 of net.sf.ehcache.EHcache) and</li>
       	<li>JCSCacheService (built on the <a href="http://commons.apache.org/proper/commons-jcs/">Java Caching System</a>,
       		which was originally a part of Turbine)</li>
       </ul>
