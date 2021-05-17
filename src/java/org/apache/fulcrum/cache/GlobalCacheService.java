@@ -37,10 +37,11 @@ public interface GlobalCacheService
     /**
      * Gets a cached object given its id (a String).
      *
+     * @param <T> type of object to return
      * @param id
      *            The String id for the object.
      * @return A CachedObject.
-     * @exception ObjectExpiredException,
+     * @throws ObjectExpiredException
      *                if the object has expired in the cache.
      */
     <T> CachedObject<T> getObject(String id) throws ObjectExpiredException;
@@ -48,6 +49,7 @@ public interface GlobalCacheService
     /**
      * Adds an object to the cache.
      *
+     * @param <T> type of object to add
      * @param id
      *            The String id for the object.
      * @param o
@@ -84,6 +86,7 @@ public interface GlobalCacheService
      * Returns the current size of the cache.
      *
      * @return int representing current cache size in number of bytes
+     * @throws IOException if unable to return cache size
      */
     int getCacheSize() throws IOException;
 

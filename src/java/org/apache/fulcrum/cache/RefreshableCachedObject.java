@@ -113,6 +113,8 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
     /**
      * Returns true if the object hasn't been touched in the previous TTL
      * period.
+     * 
+     * @return boolean status of object
      */
     public synchronized boolean isUntouched()
     {

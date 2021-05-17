@@ -117,7 +117,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      * @param id
      *            The key of the stored object.
      * @return The object from the cache.
-     * @exception ObjectExpiredException,
+     * @throws ObjectExpiredException
      *                when either the object is not in the cache or it has
      *                expired.
      */
