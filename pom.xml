@@ -25,7 +25,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.fulcrum</groupId>
   <artifactId>fulcrum-cache</artifactId>
-  <version>1.1.2-SNAPSHOT</version>
+  <version>1.1.1-SNAPSHOT</version>
   <name>Fulcrum Cache</name>
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
