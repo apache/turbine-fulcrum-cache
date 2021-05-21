@@ -150,54 +150,54 @@ public class JCSCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
      */
     @Override
-	public <T> CachedObject<T> getObject(String id) throws ObjectExpiredException
+	public <T> CachedObject<T> getObject(String objectId) throws ObjectExpiredException
     {
         @SuppressWarnings("unchecked")
-        CachedObject<T> obj = (CachedObject<T>)this.cacheManager.getFromGroup(id, group);
+        CachedObject<T> cachedObject = (CachedObject<T>)this.cacheManager.getFromGroup(objectId, group);
 
-        if (obj == null)
+        if (cachedObject == null)
         {
             // Not in the cache.
             throw new ObjectExpiredException();
         }
 
-        if (obj.isStale())
+        if (cachedObject.isStale())
         {
-            if (obj instanceof RefreshableCachedObject)
+            if (cachedObject instanceof RefreshableCachedObject)
             {
-                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
-                if (rco.isUntouched())
+                RefreshableCachedObject<?> refreshableObject = (RefreshableCachedObject<?>) cachedObject;
+                if (refreshableObject.isUntouched())
                 {
                     // Do not refresh an object that has exceeded TimeToLive
-                    removeObject(id);
+                    removeObject(objectId);
                     throw new ObjectExpiredException();
                 }
 
                 // Refresh Object
-                rco.refresh();
-                if (rco.isStale())
+                refreshableObject.refresh();
+                if (refreshableObject.isStale())
                 {
                     // Object is Expired, remove it from cache.
-                    removeObject(id);
+                    removeObject(objectId);
                     throw new ObjectExpiredException();
                 }
             }
             else
             {
                 // Expired.
-                removeObject(id);
+                removeObject(objectId);
                 throw new ObjectExpiredException();
             }
         }
 
-        if (obj instanceof RefreshableCachedObject)
+        if (cachedObject instanceof RefreshableCachedObject)
         {
             // notify it that it's being accessed.
-            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
-            rco.touch();
+            RefreshableCachedObject<?> refreshableCachedObject = (RefreshableCachedObject<?>) cachedObject;
+            refreshableCachedObject.touch();
         }
 
-        return obj;
+        return cachedObject;
     }
 
     /**
@@ -205,22 +205,22 @@ public class JCSCacheService extends AbstractLogEnabled implements
      *      org.apache.fulcrum.cache.CachedObject)
      */
     @Override
-	public <T> void addObject(String id, CachedObject<T> o)
+	public <T> void addObject(String objectId, CachedObject<T> cachedObject)
     {
         try
         {
-            if (!(o.getContents() instanceof Serializable))
+            if (!(cachedObject.getContents() instanceof Serializable))
             {
                 getLogger()
                         .warn(
                                 "Object with id ["
-                                        + id
+                                        + objectId
                                         + "] is not serializable. Expect problems with auxiliary caches.");
             }
 
             ElementAttributes attrib = (ElementAttributes) this.cacheManager.getDefaultElementAttributes();
 
-            if (o instanceof RefreshableCachedObject)
+            if (cachedObject instanceof RefreshableCachedObject)
             {
                 attrib.setIsEternal(true);
             }
@@ -228,19 +228,19 @@ public class JCSCacheService extends AbstractLogEnabled implements
             {
                 attrib.setIsEternal(false);
                 // expires in millis, maxlife in seconds
-                double tmp0 = ((double) (o.getExpires() + 500)) / 1000;
+                double tmp0 = ((double) (cachedObject.getExpires() + 500)) / 1000;
                 getLogger().debug( "setting maxlife seconds (minimum 1sec) from expiry + 0.5s: " + (int)tmp0 );
-                attrib.setMaxLife(  (tmp0 > 0 ? (int) Math.floor( tmp0 ) : 1 ) );
+                attrib.setMaxLife( tmp0 > 0 ? (int) Math.floor( tmp0 ) : 1 );
             }
 
             attrib.setLastAccessTimeNow();
             attrib.setCreateTime();
 
-            this.cacheManager.putInGroup(id, group, o, attrib);
+            this.cacheManager.putInGroup(objectId, group, cachedObject, attrib);
         }
         catch (CacheException e)
         {
-            getLogger().error("Could not add object " + id + " to cache", e);
+            getLogger().error("Could not add object " + objectId + " to cache", e);
         }
     }
 
@@ -248,9 +248,9 @@ public class JCSCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#removeObject(java.lang.String)
      */
     @Override
-	public void removeObject(String id)
+	public void removeObject(String objectId)
     {
-        this.cacheManager.removeFromGroup(id, group);
+        this.cacheManager.removeFromGroup(objectId, group);
     }
 
     /**
@@ -259,8 +259,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
     @Override
 	public List<String> getKeys()
     {
-        ArrayList<String> keys = new ArrayList<String>();
-
+        ArrayList<String> keys = new ArrayList<>();
         keys.addAll(this.cacheManager.getGroupKeys(group));
         return keys;
     }
@@ -271,14 +270,13 @@ public class JCSCacheService extends AbstractLogEnabled implements
     @Override
 	public List<CachedObject<?>> getCachedObjects()
     {
-        ArrayList<CachedObject<?>> values = new ArrayList<CachedObject<?>>();
-
+        ArrayList<CachedObject<?>> values = new ArrayList<>();
         for (String key : this.cacheManager.getGroupKeys(group))
         {
-            CachedObject<?> o = this.cacheManager.getFromGroup(key, group);
-            if (o != null)
+            CachedObject<?> cachedObject = this.cacheManager.getFromGroup(key, group);
+            if (cachedObject != null)
             {
-                values.add(o);
+                values.add(cachedObject);
             }
         }
 
@@ -310,23 +308,23 @@ public class JCSCacheService extends AbstractLogEnabled implements
 
             for (String key : this.cacheManager.getGroupKeys(group))
             {
-                CachedObject<?> o = this.cacheManager.getFromGroup(key, group);
-                if (o == null)
+                CachedObject<?> cachedObject = this.cacheManager.getFromGroup(key, group);
+                if (cachedObject == null)
                 {
                     removeObject(key);
                 }
                 else
                 {
-                    if (o instanceof RefreshableCachedObject)
+                    if (cachedObject instanceof RefreshableCachedObject)
                     {
-                        RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) o;
-                        if (rco.isUntouched())
+                        RefreshableCachedObject<?> refreshableObject = (RefreshableCachedObject<?>) cachedObject;
+                        if (refreshableObject.isUntouched())
                         {
                             this.cacheManager.removeFromGroup(key, group);
                         }
-                        else if (rco.isStale())
+                        else if (refreshableObject.isStale())
                         {
-                            rco.refresh();
+                            refreshableObject.refresh();
                         }
                     }
                 }
@@ -357,8 +355,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
         // magic number (2 bytes) and version number (2 bytes) are
         // both written to the stream before the object
         //
-        int objectsize = baos.toByteArray().length - 4 * keys.size();
-        return objectsize;
+        return baos.toByteArray().length - 4 * keys.size();
     }
 
     /**

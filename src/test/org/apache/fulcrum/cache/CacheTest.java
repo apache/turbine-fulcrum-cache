@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author <a href="paulsp@apache.org">Paul Spencer</a>
  * @author <a href="epugh@upstate.com">Eric Pugh</a>
- * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
+ * @author <a href="mailto:peter@courefreshableCachedObjectux.biz">Peter CourefreshableCachedObjectux</a>
  * @version $Id$
  */
 public class CacheTest extends BaseUnit5Test
@@ -106,7 +106,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Simple test that verify an object can be created and deleted.
      *
-     * @throws Exception
+     * @throws Exception if unable to add object
      */
     @Test
     public void testSimpleAddGetCacheObject() throws Exception
@@ -156,7 +156,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Simple test that adds, retrieves, and deletes 2 object.
      *
-     * @throws Exception
+     * @throws Exception if unable to add and retrieve objects
      */
     @Test
     public void test2ObjectAddGetCachedObject() throws Exception
@@ -215,7 +215,7 @@ public class CacheTest extends BaseUnit5Test
      * Verify that an object will throw the ObjectExpiredException when it now
      * longer exists in cache.
      *
-     * @throws Exception
+     * @throws Exception if object is not expired
      */
     @Test
     public void testObjectExpiration() throws Exception
@@ -271,7 +271,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take server minutes.
      *
-     * @throws Exception
+     * @throws Exception if flushing the cache fails
      */
     @Test
     public void testCacheFlush() throws Exception
@@ -300,7 +300,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Verify the Cache count is correct.
      *
-     * @throws Exception
+     * @throws Exception if the cache count does not match expected value
      */
     @Test
     public void testObjectCount() throws Exception
@@ -343,7 +343,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take several minutes.
      *
-     * @throws Exception
+     * @throws Exception if object is not a refreshable object
      */
     @Tag("LongRunning")
     @Test
@@ -438,7 +438,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take several minutes.
      *
-     * @throws Exception
+     * @throws Exception if object is not deleted
      */
     @Tag("LongRunning")
     @Test

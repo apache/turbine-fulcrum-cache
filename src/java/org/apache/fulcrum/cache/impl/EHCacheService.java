@@ -153,18 +153,18 @@ public class EHCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#addObject(java.lang.String, org.apache.fulcrum.cache.CachedObject)
      */
     @Override
-    public <T> void addObject(String id, CachedObject<T> o)
+    public <T> void addObject(String objectId, CachedObject<T> object)
     {
-        Element cacheElement = new Element(id, o);
+        Element cacheElement = new Element(objectId, object);
 
-        if (o instanceof RefreshableCachedObject)
+        if (object instanceof RefreshableCachedObject)
         {
             cacheElement.setEternal(true);
         }
         else
         {
             cacheElement.setEternal(false);
-            cacheElement.setTimeToLive((int)(o.getExpires() + 500) / 1000);
+            cacheElement.setTimeToLive((int)(object.getExpires() + 500) / 1000);
         }
 
         this.cache.put(cacheElement);
@@ -203,7 +203,8 @@ public class EHCacheService extends AbstractLogEnabled implements
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#getCacheSize()
      */
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public int getCacheSize() throws IOException
     {
         return (int)this.cache.calculateInMemorySize();
@@ -233,9 +234,9 @@ public class EHCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
      */
     @Override
-    public <T> CachedObject<T> getObject(String id) throws ObjectExpiredException
+    public <T> CachedObject<T> getObject(String objectId) throws ObjectExpiredException
     {
-        Element cachedElement = this.cache.get(id);
+        Element cachedElement = this.cache.get(objectId);
 
         if (cachedElement == null)
         {
@@ -244,54 +245,54 @@ public class EHCacheService extends AbstractLogEnabled implements
         }
 
         @SuppressWarnings("unchecked")
-        CachedObject<T> obj = (CachedObject<T>)cachedElement.getObjectValue();
+        CachedObject<T> cachedObject = (CachedObject<T>)cachedElement.getObjectValue();
 
-        if (obj.isStale())
+        if (cachedObject.isStale())
         {
-            if (obj instanceof RefreshableCachedObject)
+            if (cachedObject instanceof RefreshableCachedObject)
             {
-                RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
-                if (rco.isUntouched())
+                RefreshableCachedObject<?> refreshableCachedObject = (RefreshableCachedObject<?>) cachedObject;
+                if (refreshableCachedObject.isUntouched())
                 {
                     // Do not refresh an object that has exceeded TimeToLive
-                    removeObject(id);
+                    removeObject(objectId);
                     throw new ObjectExpiredException();
                 }
 
                 // Refresh Object
-                rco.refresh();
-                if (rco.isStale())
+                refreshableCachedObject.refresh();
+                if (refreshableCachedObject.isStale())
                 {
                     // Object is Expired, remove it from cache.
-                    removeObject(id);
+                    removeObject(objectId);
                     throw new ObjectExpiredException();
                 }
             }
             else
             {
                 // Expired.
-                removeObject(id);
+                removeObject(objectId);
                 throw new ObjectExpiredException();
             }
         }
 
-        if (obj instanceof RefreshableCachedObject)
+        if (cachedObject instanceof RefreshableCachedObject)
         {
             // notify it that it's being accessed.
-            RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) obj;
-            rco.touch();
+            RefreshableCachedObject<?> refreshableCachedObject = (RefreshableCachedObject<?>) cachedObject;
+            refreshableCachedObject.touch();
         }
 
-        return obj;
+        return cachedObject;
     }
 
     /**
      * @see org.apache.fulcrum.cache.GlobalCacheService#removeObject(java.lang.String)
      */
     @Override
-    public void removeObject(String id)
+    public void removeObject(String objectId)
     {
-        this.cache.remove(id);
+        this.cache.remove(objectId);
     }
 
     /**
@@ -327,18 +328,18 @@ public class EHCacheService extends AbstractLogEnabled implements
                     continue;
                 }
 
-                Object o = cachedElement.getObjectValue();
+                Object object = cachedElement.getObjectValue();
 
-                if (o instanceof RefreshableCachedObject)
+                if (object instanceof RefreshableCachedObject)
                 {
-                    RefreshableCachedObject<?> rco = (RefreshableCachedObject<?>) o;
-                    if (rco.isUntouched())
+                    RefreshableCachedObject<?> refreshableObject = (RefreshableCachedObject<?>) object;
+                    if (refreshableObject.isUntouched())
                     {
                         this.cache.remove(key);
                     }
-                    else if (rco.isStale())
+                    else if (refreshableObject.isStale())
                     {
-                        rco.refresh();
+                    	refreshableObject.refresh();
                     }
                 }
             }

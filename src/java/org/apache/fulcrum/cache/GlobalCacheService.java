@@ -26,7 +26,7 @@ import java.util.List;
  * GlobalCacheService interface.
  *
  * @author <a href="mailto:mbryson@mont.mindspring.com">Dave Bryson</a>
- * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
+ * @author <a href="mailto:peter@courefreshableCachedObjectux.biz">Peter CourefreshableCachedObjectux</a>
  * @version $Id$
  */
 public interface GlobalCacheService
@@ -38,32 +38,32 @@ public interface GlobalCacheService
      * Gets a cached object given its id (a String).
      *
      * @param <T> type of object to return
-     * @param id
+     * @param objectId
      *            The String id for the object.
      * @return A CachedObject.
      * @throws ObjectExpiredException
      *                if the object has expired in the cache.
      */
-    <T> CachedObject<T> getObject(String id) throws ObjectExpiredException;
+    <T> CachedObject<T> getObject(String objectId) throws ObjectExpiredException;
 
     /**
      * Adds an object to the cache.
      *
      * @param <T> type of object to add
-     * @param id
+     * @param objectId
      *            The String id for the object.
-     * @param o
+     * @param object
      *            The object to add to the cache.
      */
-    <T> void addObject(String id, CachedObject<T> o);
+    <T> void addObject(String objectId, CachedObject<T> object);
 
     /**
      * Removes an object from the cache.
      *
-     * @param id
+     * @param objectId
      *            The String id for the object.
      */
-    void removeObject(String id);
+    void removeObject(String objectId);
 
     /**
      * Returns a copy of keys to objects in the cache as a list.

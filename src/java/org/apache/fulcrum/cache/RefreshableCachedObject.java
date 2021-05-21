@@ -47,37 +47,37 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      * How long to wait before removing an untouched object from the cache.
      * Negative numbers mean never remove (the default).
      */
-    private long timeToLive = -1;
+    private transient long timeToLive = -1;
 
     /**
      * The last time the Object was accessed from the cache.
      */
-    private long lastAccess;
+    private transient long lastAccess;
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
      *
-     * @param o
+     * @param object
      *            The object you want to cache.
      */
-    public RefreshableCachedObject(T o)
+    public RefreshableCachedObject(T object)
     {
-        super(o);
+        super(object);
         this.lastAccess = System.currentTimeMillis();
     }
 
     /**
      * Constructor.
      *
-     * @param o
+     * @param object
      *            The object to cache.
      * @param expires
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public RefreshableCachedObject(T o, long expires)
+    public RefreshableCachedObject(T object, long expires)
     {
-        super(o, expires);
+        super(object, expires);
         this.lastAccess = System.currentTimeMillis();
     }
 
@@ -118,19 +118,12 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      */
     public synchronized boolean isUntouched()
     {
-        if (this.timeToLive < 0)
-        {
-            return false;
-        }
-
+    	boolean untouched = false;
         if (this.lastAccess + this.timeToLive < System.currentTimeMillis())
         {
-            return true;
+        	untouched = true;
         }
-        else
-        {
-            return false;
-        }
+        return untouched;
     }
 
     /**
@@ -138,11 +131,11 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      */
     public void refresh()
     {
-        Refreshable r = getContents();
+        final Refreshable refreshable = getContents();
         synchronized (this)
         {
             this.created = System.currentTimeMillis();
-            r.refresh();
+            refreshable.refresh();
         }
     }
 }
