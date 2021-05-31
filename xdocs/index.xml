@@ -87,8 +87,8 @@
           <td>[0|1]</td>
           <td>
             The cache uses a background thread to check for expired objects.
-            This defines the time between two checks in seconds. The default
-            is 5.
+            This defines the time between two checks in milliseconds. The default
+            is 5000.
           </td>
         </tr>
       </table>
@@ -96,7 +96,7 @@
 
     <subsection name="Component Configuration Example">
       <source><![CDATA[
-    <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
+    <cache cacheInitialSize="20" cacheCheckFrequency="5000"/>
       ]]></source>
     </subsection>
   </section>

@@ -90,6 +90,11 @@ public class JCSCacheService extends AbstractLogEnabled implements
 
     /** flag to stop the housekeeping thread when the component is disposed. */
     private boolean continueThread;
+    
+    public JCSCacheService()
+    {
+        
+    }
 
     // ---------------- Avalon Lifecycle Methods ---------------------
 
@@ -150,7 +155,7 @@ public class JCSCacheService extends AbstractLogEnabled implements
      * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
      */
     @Override
-	public <T> CachedObject<T> getObject(String objectId) throws ObjectExpiredException
+	public <T> CachedObject<T> getObject(final String objectId) throws ObjectExpiredException
     {
         @SuppressWarnings("unchecked")
         CachedObject<T> cachedObject = (CachedObject<T>)this.cacheManager.getFromGroup(objectId, group);
@@ -213,9 +218,10 @@ public class JCSCacheService extends AbstractLogEnabled implements
             {
                 getLogger()
                         .warn(
-                                "Object with id ["
+                                "Object (contents) with id ["
                                         + objectId
-                                        + "] is not serializable. Expect problems with auxiliary caches.");
+                                        + "] is not serializable. Expect problems with auxiliary caches: " + 
+                                        cachedObject.getContents().getClass().getSimpleName());
             }
 
             ElementAttributes attrib = (ElementAttributes) this.cacheManager.getDefaultElementAttributes();

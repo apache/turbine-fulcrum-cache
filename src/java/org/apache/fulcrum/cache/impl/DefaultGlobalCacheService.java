@@ -98,6 +98,11 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
 
     /** flag to stop the housekeeping thread when the component is disposed. */
     private transient boolean continueThread;
+    
+    public DefaultGlobalCacheService()
+    {
+     
+    }
 
     /**
      * Get the Cache Check Frequency in milliseconds
@@ -171,7 +176,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
      *            The object to cache.
      */
     @Override
-    public <T> void addObject(String objectId, CachedObject<T> object)
+    public <T> void addObject(final String objectId, final CachedObject<T> object)
     {
         // If the cache already contains the key, remove it and add
         // the fresh one.
@@ -336,8 +341,8 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     @Override
     public int getCacheSize() throws IOException
     {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(baos);
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final ObjectOutputStream out = new ObjectOutputStream(baos);
         out.writeObject(this.cache);
         out.flush();
         //

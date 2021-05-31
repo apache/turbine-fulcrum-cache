@@ -25,10 +25,14 @@
 
   <body>
     <release version="1.1.1" date="in subversion">
+         <action dev="gk" type="update">
+          Backward-incompatible change: Global default cache frequency setting is now in milliseconds, 
+          as already the ehcache and the JCS.
+       </action>
      <action dev="gk" type="update">
         - Test: Use tags to skip long running tests, minor fixes in log4j2 configuration and test assertion.
         - Update tests to JUnit 5 and dependencies to Fulcrum Testcontainer 1.0.9 and Turbine Parent 8
-        -  Updated EHCache to v2.10.9.2
+        -  Updated EHCache to v2.10.9.2.
        </action>
        <action dev="gk" type="update">
          Update JCS to commons-jcs3-core

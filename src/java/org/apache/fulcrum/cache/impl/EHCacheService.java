@@ -87,6 +87,10 @@ public class EHCacheService extends AbstractLogEnabled implements
     /** A cache instance */
     private Cache cache;
 
+    public EHCacheService()
+    {
+     
+    }
     // ---------------- Avalon Lifecycle Methods ---------------------
 
     /**

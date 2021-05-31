@@ -290,6 +290,7 @@ public class CacheTest extends BaseUnit5Test
         // Flush Cache
         this.globalCache.flushCache();
         // Wait 15 seconds, 3 Refresh
+        // if using disk cache, you might have to wait longer  
         Thread.sleep((getCacheRefresh() * 2) + 1);
         assertEquals( 0, this.globalCache.getNumberOfObjects(),
                 "After refresh");
@@ -356,6 +357,7 @@ public class CacheTest extends BaseUnit5Test
                 getTestExpireTime());
         assertNotNull( cacheObject, "Failed to create a cachable object");
         long addTime = System.currentTimeMillis();
+        log.info( "Adding refreshable object to cache: {}", cacheObject );
         this.globalCache.addObject(cacheKey, cacheObject);
         // Try to get un-expired object
         try
@@ -455,7 +457,8 @@ public class CacheTest extends BaseUnit5Test
         assertEquals(getTestExpireTime(), cacheObject
                 .getTTL(),
                 "Returned TimeToLive");
-        // Add object to Cache
+        // Add object to Cache        
+        log.info( "Adding refreshable object to cache: {}", cacheObject );
         this.globalCache.addObject(cacheKey, cacheObject);
         long addTime = System.currentTimeMillis();
         // Try to get un-expired object
@@ -622,7 +625,7 @@ public class CacheTest extends BaseUnit5Test
         {
             DefaultGlobalCacheService cache =
                 (DefaultGlobalCacheService)this.lookup(GlobalCacheService.ROLE);
-            return cache.getCacheCheckFrequency() * 1000L;
+            return cache.getCacheCheckFrequency();
         }
         catch (ComponentException e)
         {
@@ -633,7 +636,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * How long until it expires
      *
-     * @return the cache refresh plus 1000.
+     * @return the cache refresh plus 1000 millisec.
      */
     private long getTestExpireTime()
     {

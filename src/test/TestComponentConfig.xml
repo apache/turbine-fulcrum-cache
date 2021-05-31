@@ -18,7 +18,7 @@
  under the License.
 -->
 <componentConfig>
-    <cache cacheInitialSize="20" cacheCheckFrequency="5"/>
+    <cache cacheInitialSize="20" cacheCheckFrequency="5000"/>
     <ehcache>
         <!--  in millisecs -->
         <cacheCheckFrequency>5000</cacheCheckFrequency>

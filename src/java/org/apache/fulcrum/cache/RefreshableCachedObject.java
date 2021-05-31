@@ -46,13 +46,16 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
     /**
      * How long to wait before removing an untouched object from the cache.
      * Negative numbers mean never remove (the default).
+     * 
+     * time to live in millisec, getter/setter ({@link #getTTL()}
+     * 
      */
-    private transient long timeToLive = -1;
+    private long timeToLive = -1;
 
     /**
      * The last time the Object was accessed from the cache.
      */
-    private transient long lastAccess;
+    private long lastAccess;
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
@@ -60,10 +63,10 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      * @param object
      *            The object you want to cache.
      */
-    public RefreshableCachedObject(T object)
+    public RefreshableCachedObject(final T object)
     {
         super(object);
-        this.lastAccess = System.currentTimeMillis();
+        setLastAccess(System.currentTimeMillis());
     }
 
     /**
@@ -75,10 +78,10 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public RefreshableCachedObject(T object, long expires)
+    public RefreshableCachedObject(final T object, final long expires)
     {
         super(object, expires);
-        this.lastAccess = System.currentTimeMillis();
+        setLastAccess(System.currentTimeMillis());
     }
 
     /**
@@ -87,9 +90,11 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      * @param timeToLive
      *            the new Value in milliseconds
      */
-    public synchronized void setTTL(long timeToLive)
+    public void setTTL(final long timeToLive)
     {
-        this.timeToLive = timeToLive;
+        synchronized(this) {
+            this.timeToLive = timeToLive;
+        }
     }
 
     /**
@@ -97,17 +102,21 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      *
      * @return The current timeToLive value (in milliseconds)
      */
-    public synchronized long getTTL()
+    public long getTTL()
     {
-        return this.timeToLive;
+        synchronized(this) {
+            return this.timeToLive;
+        }
     }
 
     /**
      * Sets the last access time to the current time.
      */
-    public synchronized void touch()
+    public void touch()
     {
-        this.lastAccess = System.currentTimeMillis();
+        synchronized(this) {
+            this.lastAccess = System.currentTimeMillis();
+        }
     }
 
     /**
@@ -116,14 +125,16 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
      * 
      * @return boolean status of object
      */
-    public synchronized boolean isUntouched()
+    public boolean isUntouched()
     {
-    	boolean untouched = false;
-        if (this.lastAccess + this.timeToLive < System.currentTimeMillis())
-        {
-        	untouched = true;
+        boolean untouched = false;
+        synchronized(this) {
+            if (this.lastAccess + this.timeToLive < System.currentTimeMillis())
+            {
+            	untouched = true;
+            }
+            return untouched;
         }
-        return untouched;
     }
 
     /**
@@ -137,5 +148,15 @@ public class RefreshableCachedObject<T extends Refreshable> extends CachedObject
             this.created = System.currentTimeMillis();
             refreshable.refresh();
         }
+    }
+
+    public long getLastAccess()
+    {
+        return lastAccess;
+    }
+
+    public void setLastAccess(long lastAccess)
+    {
+        this.lastAccess = lastAccess;
     }
 }

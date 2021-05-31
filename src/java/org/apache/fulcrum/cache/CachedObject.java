@@ -54,13 +54,13 @@ public class CachedObject<T> implements Serializable
     private T contents = null;
 
     /** Default age (30 minutes). */
-    private final long defaultAge = 1_800_000;
+    private static final long DEFAULT_AGE = 1_800_000;
 
     /** When the object is created. */
-    protected long created = 0;
+    protected long created;
 
     /** When the object should expire. */
-    private long expires = 0;
+    private long expires;
 
     /** Is this object stale/expired? */
     private final AtomicBoolean stale = new AtomicBoolean();
@@ -71,7 +71,7 @@ public class CachedObject<T> implements Serializable
      * @param object
      *            The object you want to cache.
      */
-    public CachedObject(T object)
+    public CachedObject(final T object)
     {
         this(object, DEFAULT);
     }
@@ -85,11 +85,11 @@ public class CachedObject<T> implements Serializable
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public CachedObject(T object, long expires)
+    public CachedObject(final T object, final long expires)
     {
         if (expires == DEFAULT)
         {
-            this.expires = this.defaultAge;
+            this.expires = this.DEFAULT_AGE;
         } else {
             this.expires = expires;
         }
@@ -135,11 +135,11 @@ public class CachedObject<T> implements Serializable
      * @param expires
      *            Expiration interval in millis ( 1 second = 1000 millis)
      */
-    public void setExpires(long expires)
+    public void setExpires(final long expires)
     {
         if (expires == DEFAULT)
         {
-            this.expires = this.defaultAge;
+            this.expires = this.DEFAULT_AGE;
         }
         else
         {
@@ -161,7 +161,7 @@ public class CachedObject<T> implements Serializable
      * @param stale
      *            Whether the object is stale or not.
      */
-    public void setStale(boolean stale)
+    public void setStale(final boolean stale)
     {
         this.stale.set( stale );
     }
