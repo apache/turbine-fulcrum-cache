@@ -54,47 +54,47 @@ public class CachedObject<T> implements Serializable
     private T contents = null;
 
     /** Default age (30 minutes). */
-    private long defaultage = 1800000;
+    private static final long DEFAULT_AGE = 1_800_000;
 
-    /** When created. * */
-    protected long created = 0;
+    /** When the object is created. */
+    protected long created;
 
-    /** When it expires. * */
-    private long expires = 0;
+    /** When the object should expire. */
+    private long expires;
 
     /** Is this object stale/expired? */
-    private AtomicBoolean stale = new AtomicBoolean();
+    private final AtomicBoolean stale = new AtomicBoolean();
 
     /**
      * Constructor; sets the object to expire in the default time (30 minutes).
      *
-     * @param o
+     * @param object
      *            The object you want to cache.
      */
-    public CachedObject(T o)
+    public CachedObject(final T object)
     {
-        this(o, DEFAULT);
+        this(object, DEFAULT);
     }
 
     /**
      * Constructor.
      *
-     * @param o
+     * @param object
      *            The object to cache.
      * @param expires
      *            How long before the object expires, in ms, e.g. 1000 = 1
      *            second.
      */
-    public CachedObject(T o, long expires)
+    public CachedObject(final T object, final long expires)
     {
         if (expires == DEFAULT)
         {
-            this.expires = this.defaultage;
+            this.expires = this.DEFAULT_AGE;
         } else {
             this.expires = expires;
         }
 
-        this.contents = o;
+        this.contents = object;
 
         this.created = System.currentTimeMillis();
     }
@@ -135,11 +135,11 @@ public class CachedObject<T> implements Serializable
      * @param expires
      *            Expiration interval in millis ( 1 second = 1000 millis)
      */
-    public void setExpires(long expires)
+    public void setExpires(final long expires)
     {
         if (expires == DEFAULT)
         {
-            this.expires = this.defaultage;
+            this.expires = this.DEFAULT_AGE;
         }
         else
         {
@@ -161,20 +161,11 @@ public class CachedObject<T> implements Serializable
      * @param stale
      *            Whether the object is stale or not.
      */
-    public void setStale(boolean stale)
+    public void setStale(final boolean stale)
     {
         this.stale.set( stale );
     }
-
-    /**
-     * Get the stale status for the object.
-     *
-     * @return Whether the object is stale or not.
-     */
-    public boolean getStale()
-    {
-        return this.stale.get();
-    }
+    
 
     /**
      * Is the object stale?
@@ -183,12 +174,12 @@ public class CachedObject<T> implements Serializable
      */
     public boolean isStale()
     {
-        if (this.expires == FOREVER)
+    	boolean currentState = false;
+        if (this.expires != FOREVER)
         {
-            return false;
+        	setStale((System.currentTimeMillis() - this.created) > this.expires);
+        	currentState = this.stale.get();
         }
-
-        setStale((System.currentTimeMillis() - this.created) > this.expires);
-        return getStale();
+        return currentState;
     }
 }

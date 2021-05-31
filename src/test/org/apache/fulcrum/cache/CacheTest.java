@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author <a href="paulsp@apache.org">Paul Spencer</a>
  * @author <a href="epugh@upstate.com">Eric Pugh</a>
- * @author <a href="mailto:peter@courcoux.biz">Peter Courcoux</a>
+ * @author <a href="mailto:peter@courefreshableCachedObjectux.biz">Peter CourefreshableCachedObjectux</a>
  * @version $Id$
  */
 public class CacheTest extends BaseUnit5Test
@@ -106,7 +106,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Simple test that verify an object can be created and deleted.
      *
-     * @throws Exception
+     * @throws Exception if unable to add object
      */
     @Test
     public void testSimpleAddGetCacheObject() throws Exception
@@ -156,7 +156,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Simple test that adds, retrieves, and deletes 2 object.
      *
-     * @throws Exception
+     * @throws Exception if unable to add and retrieve objects
      */
     @Test
     public void test2ObjectAddGetCachedObject() throws Exception
@@ -215,7 +215,7 @@ public class CacheTest extends BaseUnit5Test
      * Verify that an object will throw the ObjectExpiredException when it now
      * longer exists in cache.
      *
-     * @throws Exception
+     * @throws Exception if object is not expired
      */
     @Test
     public void testObjectExpiration() throws Exception
@@ -271,7 +271,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take server minutes.
      *
-     * @throws Exception
+     * @throws Exception if flushing the cache fails
      */
     @Test
     public void testCacheFlush() throws Exception
@@ -290,6 +290,7 @@ public class CacheTest extends BaseUnit5Test
         // Flush Cache
         this.globalCache.flushCache();
         // Wait 15 seconds, 3 Refresh
+        // if using disk cache, you might have to wait longer  
         Thread.sleep((getCacheRefresh() * 2) + 1);
         assertEquals( 0, this.globalCache.getNumberOfObjects(),
                 "After refresh");
@@ -300,7 +301,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * Verify the Cache count is correct.
      *
-     * @throws Exception
+     * @throws Exception if the cache count does not match expected value
      */
     @Test
     public void testObjectCount() throws Exception
@@ -343,7 +344,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take several minutes.
      *
-     * @throws Exception
+     * @throws Exception if object is not a refreshable object
      */
     @Tag("LongRunning")
     @Test
@@ -356,6 +357,7 @@ public class CacheTest extends BaseUnit5Test
                 getTestExpireTime());
         assertNotNull( cacheObject, "Failed to create a cachable object");
         long addTime = System.currentTimeMillis();
+        log.info( "Adding refreshable object to cache: {}", cacheObject );
         this.globalCache.addObject(cacheKey, cacheObject);
         // Try to get un-expired object
         try
@@ -438,7 +440,7 @@ public class CacheTest extends BaseUnit5Test
      *
      * This test can take several minutes.
      *
-     * @throws Exception
+     * @throws Exception if object is not deleted
      */
     @Tag("LongRunning")
     @Test
@@ -455,7 +457,8 @@ public class CacheTest extends BaseUnit5Test
         assertEquals(getTestExpireTime(), cacheObject
                 .getTTL(),
                 "Returned TimeToLive");
-        // Add object to Cache
+        // Add object to Cache        
+        log.info( "Adding refreshable object to cache: {}", cacheObject );
         this.globalCache.addObject(cacheKey, cacheObject);
         long addTime = System.currentTimeMillis();
         // Try to get un-expired object
@@ -622,7 +625,7 @@ public class CacheTest extends BaseUnit5Test
         {
             DefaultGlobalCacheService cache =
                 (DefaultGlobalCacheService)this.lookup(GlobalCacheService.ROLE);
-            return cache.getCacheCheckFrequency() * 1000L;
+            return cache.getCacheCheckFrequency();
         }
         catch (ComponentException e)
         {
@@ -633,7 +636,7 @@ public class CacheTest extends BaseUnit5Test
     /**
      * How long until it expires
      *
-     * @return the cache refresh plus 1000.
+     * @return the cache refresh plus 1000 millisec.
      */
     private long getTestExpireTime()
     {

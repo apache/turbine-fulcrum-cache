@@ -16,6 +16,7 @@
 # under the License.
 # Java Caching System configuration
 
+# to activate disk cache set to jcs.region.default=DC2
 jcs.default=
 jcs.default.cacheattributes=org.apache.commons.jcs3.engine.CompositeCacheAttributes
 jcs.default.cacheattributes.MaxObjects=1000
@@ -27,13 +28,43 @@ jcs.default.cacheattributes.MemoryCacheName=org.apache.commons.jcs3.engine.memor
 #jcs.default.cacheattributes.MaxSpoolPerRun=500
 jcs.default.elementattributes=org.apache.commons.jcs3.engine.ElementAttributes
 
-# isEternal is assumed by default in Fulcrum Cache 
+# isEternal is assumed by default in Fulcrum Cache Refreshable true else false
 jcs.default.elementattributes.IsEternal=false
 ## memory shrinking end
 
+# not used, only default
 jcs.region.fulcrum=
 jcs.region.fulcrum.cacheattributes=org.apache.commons.jcs3.engine.CompositeCacheAttributes
 jcs.region.fulcrum.cacheattributes.MaxObjects=100
 jcs.region.fulcrum.cacheattributes.MemoryCacheName=org.apache.commons.jcs3.engine.memory.lru.LRUMemoryCache
 jcs.region.fulcrum.elementattributes=org.apache.commons.jcs3.engine.ElementAttributes
 
+##############################################################
+################## AUXILIARY CACHES AVAILABLE ################
+
+# Disk Cache Using a Pooled Event Queue -- this allows you
+# to control the maximum number of threads it will use.
+# Each region uses 1 thread by default in the SINGLE model.
+# adding more threads than regions does not help performance.
+# If you want to use a separate pool for each disk cache, either use
+# the single model or define a different auxiliary for each region and use the Pooled type.
+# SINGLE is generally best unless you have a huge # of regions.
+jcs.auxiliary.DC2=org.apache.commons.jcs3.auxiliary.disk.indexed.IndexedDiskCacheFactory
+jcs.auxiliary.DC2.attributes=org.apache.commons.jcs3.auxiliary.disk.indexed.IndexedDiskCacheAttributes
+jcs.auxiliary.DC2.attributes.DiskPath=target/test-sandbox/raf
+jcs.auxiliary.DC2.attributes.MaxPurgatorySize=10000
+jcs.auxiliary.DC2.attributes.MaxKeySize=10000
+jcs.auxiliary.DC2.attributes.OptimizeAtRemoveCount=300000
+jcs.auxiliary.DC2.attributes.OptimizeOnShutdown=true
+jcs.auxiliary.DC2.attributes.EventQueueType=POOLED
+jcs.auxiliary.DC2.attributes.EventQueuePoolName=disk_cache_event_queue
+
+##############################################################
+################## OPTIONAL THREAD POOL CONFIGURATION ########
+
+# Disk Cache Event Queue Pool
+thread_pool.disk_cache_event_queue.useBoundary=false
+thread_pool.disk_cache_event_queue.maximumPoolSize=15
+thread_pool.disk_cache_event_queue.minimumPoolSize=1
+thread_pool.disk_cache_event_queue.keepAliveTime=3500
+thread_pool.disk_cache_event_queue.startUpSize=1
