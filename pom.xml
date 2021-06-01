@@ -20,13 +20,13 @@
     <groupId>org.apache.turbine</groupId>
     <artifactId>turbine-parent</artifactId>
     <version>8</version>
-    <relativePath></relativePath>
+    <relativePath />
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.fulcrum</groupId>
   <artifactId>fulcrum-cache</artifactId>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>2.0.0</version>
   <name>Fulcrum Cache</name>
   <inceptionYear>2004</inceptionYear>
   <description>Fulcrum Cache Service</description>
@@ -41,9 +41,9 @@
     </distributionManagement>
         
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</developerConnection>
-    <url>http://svn.apache.org/viewvc/turbine/fulcrum/trunk/cache/</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/tags/fulcrum-cache-2.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/tags/fulcrum-cache-2.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/turbine/fulcrum/tags/fulcrum-cache-2.0.0</url>
   </scm>
 
   <developers>
