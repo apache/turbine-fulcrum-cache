@@ -24,7 +24,9 @@
   </properties>
 
   <body>
-    <release version="1.1.1" date="in subversion">
+     <release version="2.0.1" date="in subversion">
+      </release>
+    <release version="2.0.0." date="2021-06-08">
          <action dev="gk" type="update">
           Backward-incompatible change: Global default cache frequency setting is now in milliseconds, 
           as already the ehcache and the JCS.
