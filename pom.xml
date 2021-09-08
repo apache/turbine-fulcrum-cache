@@ -41,9 +41,9 @@
     </distributionManagement>
         
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/turbine/fulcrum/trunk/cache/</developerConnection>
-    <url>http://svn.apache.org/viewvc/turbine/fulcrum/trunk/cache/</url>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/turbine-fulcrum-cache.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/turbine-fulcrum-cache.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf/turbine-fulcrum-cache.git</url>
   </scm>
 
   <developers>
