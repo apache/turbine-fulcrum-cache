@@ -34,10 +34,9 @@
   
     <!-- Required for staging to work -->
     <distributionManagement>
-        <site>
-            <id>turbine.apache.org</id>
-            <url>https://turbine.apache.org/fulcrum/fulcrum-cache/</url>
-        </site>
+        <id>apache.website</id>
+      <!-- scmPubUrl should be different for each project. If not defined scmPubUrl uses default value ${project.distributionManagement.site.url} -->
+      <url>scm:git:${turbine.scmPubUrl}</url>
     </distributionManagement>
         
   <scm>
@@ -148,7 +147,7 @@
   </build>
 
   <properties>
-    <turbine.site.path>fulcrum/fulcrum-cache</turbine.site.path>
+    <turbine.site.path>turbine-fulcrum-cache</turbine.site.path>
     <turbine.scmPubCheckoutDirectory>${turbine.site.cache}/fulcrum/cache</turbine.scmPubCheckoutDirectory>
   </properties>
 
