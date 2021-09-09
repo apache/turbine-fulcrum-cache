@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"org.apache.fulcrum.cache","l":"CacheTest"},{"p":"org.apache.fulcrum.cache","l":"EHCacheTest"},{"p":"org.apache.fulcrum.cache","l":"JCSCacheTest"}]

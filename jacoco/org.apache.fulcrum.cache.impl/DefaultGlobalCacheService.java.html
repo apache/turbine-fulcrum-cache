@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultGlobalCacheService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fulcrum Cache</a> &gt; <a href="index.source.html" class="el_package">org.apache.fulcrum.cache.impl</a> &gt; <span class="el_source">DefaultGlobalCacheService.java</span></div><h1>DefaultGlobalCacheService.java</h1><pre class="source lang-java linenums">package org.apache.fulcrum.cache.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.avalon.framework.activity.Disposable;
+import org.apache.avalon.framework.activity.Initializable;
+import org.apache.avalon.framework.configuration.Configurable;
+import org.apache.avalon.framework.configuration.Configuration;
+import org.apache.avalon.framework.configuration.ConfigurationException;
+import org.apache.avalon.framework.logger.AbstractLogEnabled;
+import org.apache.avalon.framework.thread.ThreadSafe;
+import org.apache.fulcrum.cache.CachedObject;
+import org.apache.fulcrum.cache.GlobalCacheService;
+import org.apache.fulcrum.cache.ObjectExpiredException;
+import org.apache.fulcrum.cache.RefreshableCachedObject;
+
+/**
+ * This Service functions as a Global Cache. A global cache is a good place to
+ * store items that you may need to access often but don't necessarily need (or
+ * want) to fetch from the database everytime. A good example would be a look up
+ * table of States that you store in a database and use throughout your
+ * application. Since information about States doesn't change very often, you
+ * could store this information in the Global Cache and decrease the overhead of
+ * hitting the database everytime you need State information.
+ *
+ * @author &lt;a href=&quot;mailto:mbryson@mont.mindspring.com&quot;&gt;Dave Bryson&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:jon@clearink.com&quot;&gt;Jon S. Stevens&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:john@zenplex.com&quot;&gt;John Thorhauer&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:hps@intermeta.de&quot;&gt;Henning P. Schmiedehausen&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:epugh@upstate.com&quot;&gt;Eric Pugh&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:peter@courefreshableCachedObjectux.biz&quot;&gt;Peter CourefreshableCachedObjectux&lt;/a&gt;
+ * @version $Id$
+ */
+public class DefaultGlobalCacheService extends AbstractLogEnabled implements
+        GlobalCacheService, Runnable, Configurable, Initializable, Disposable,
+        ThreadSafe
+{
+    /**
+     * Initial size of hash table Value must be &amp;gt; 0. Default = 20
+     */
+    public static final int DEFAULT_INITIAL_CACHE_SIZE = 20;
+
+    /**
+     * The property for the InitalCacheSize
+     */
+    public static final String INITIAL_CACHE_SIZE = &quot;cacheInitialSize&quot;;
+
+    /**
+     * The property for the Cache check frequency
+     */
+    public static final String CACHE_CHECK_FREQUENCY = &quot;cacheCheckFrequency&quot;;
+
+    /**
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be &amp;gt;
+     * 0. Default = 5 seconds
+     */
+    public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
+
+    /** The cache. */
+<span class="fc" id="L84">    protected transient ConcurrentHashMap&lt;String, CachedObject&lt;?&gt;&gt; cache = null;</span>
+
+    /**
+     * cacheCheckFrequency (default - 5 seconds)
+     */
+    private transient long cacheCheckFrequency;
+
+    /**
+     * cacheInitialSize (default - 20)
+     */
+    private transient int cacheInitialSize;
+
+    /** thread for removing stale items from the cache */
+    private transient Thread houseKeepingThread;
+
+    /** flag to stop the housekeeping thread when the component is disposed. */
+    private transient boolean continueThread;
+    
+    public DefaultGlobalCacheService()
+<span class="fc" id="L103">    {</span>
+     
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * Get the Cache Check Frequency in milliseconds
+     *
+     * @return the time between two cache check runs in milliseconds
+     */
+    public long getCacheCheckFrequency()
+    {
+<span class="fc" id="L114">        return this.cacheCheckFrequency;</span>
+    }
+
+    /**
+     * Returns an item from the cache. /** Returns an item from the cache.
+     * RefreshableCachedObject will be refreshed if it is expired and not
+     * untouched.
+     *
+     * @param objectId
+     *            The key of the stored object.
+     * @return The object from the cache.
+     * @throws ObjectExpiredException
+     *                when either the object is not in the cache or it has
+     *                expired.
+     */
+    @Override
+    public &lt;T&gt; CachedObject&lt;T&gt; getObject(String objectId) throws ObjectExpiredException
+    {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L133">        final CachedObject&lt;T&gt; cachedObject = (CachedObject&lt;T&gt;) this.cache.get(objectId);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (cachedObject == null)</span>
+        {
+            // Not in the cache.
+<span class="fc" id="L137">            throw new ObjectExpiredException();</span>
+        }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (cachedObject.isStale())</span>
+        {
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            if (cachedObject instanceof RefreshableCachedObject)</span>
+            {
+<span class="nc" id="L143">                RefreshableCachedObject&lt;?&gt; refreshableCachedObj = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (refreshableCachedObj.isUntouched())</span>
+                {
+<span class="nc" id="L146">                    throw new ObjectExpiredException();</span>
+                }
+                // Refresh Object
+<span class="nc" id="L149">                refreshableCachedObj.refresh();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                if (refreshableCachedObj.isStale())</span>
+                {
+<span class="nc" id="L152">                    throw new ObjectExpiredException();</span>
+                }
+<span class="nc" id="L154">            }</span>
+            else
+            {
+                // Expired.
+<span class="fc" id="L158">                throw new ObjectExpiredException();</span>
+            }
+        }
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (cachedObject instanceof RefreshableCachedObject)</span>
+        {
+            // notify it that it's being accessed.
+<span class="nc" id="L164">            RefreshableCachedObject&lt;?&gt; refreshableCachedObj = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc" id="L165">            refreshableCachedObj.touch();</span>
+        }
+<span class="fc" id="L167">        return cachedObject;</span>
+    }
+
+    /**
+     * Adds an object to the cache.
+     *
+     * @param objectId
+     *            The key to store the object by.
+     * @param object
+     *            The object to cache.
+     */
+    @Override
+    public &lt;T&gt; void addObject(final String objectId, final CachedObject&lt;T&gt; object)
+    {
+        // If the cache already contains the key, remove it and add
+        // the fresh one.
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (this.cache.containsKey(objectId))</span>
+        {
+<span class="fc" id="L185">            this.cache.remove(objectId);</span>
+        }
+<span class="fc" id="L187">        this.cache.put(objectId, object);</span>
+<span class="fc" id="L188">    }</span>
+
+    /**
+     * Removes an object from the cache.
+     *
+     * @param objectId
+     *            The String id for the object.
+     */
+    @Override
+    public void removeObject(String objectId)
+    {
+<span class="fc" id="L199">        this.cache.remove(objectId);</span>
+<span class="fc" id="L200">    }</span>
+
+    /**
+     * Returns a copy of keys to objects in the cache as a list.
+     *
+     * Note that keys to expired objects are not returned.
+     *
+     * @return A List of &lt;code&gt;String&lt;/code&gt;'s representing the keys to
+     *         objects in the cache.
+     */
+    @Override
+    public List&lt;String&gt; getKeys()
+    {
+<span class="fc" id="L213">        ArrayList&lt;String&gt; keys = new ArrayList&lt;&gt;(this.cache.size());</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        for (String key : this.cache.keySet())</span>
+        {
+            try
+            {
+<span class="fc" id="L218">            	getObject(key);</span>
+            }
+<span class="nc" id="L220">            catch (ObjectExpiredException oee)</span>
+            {
+                // this is OK we just do not want this key
+<span class="nc" id="L223">                continue;</span>
+<span class="fc" id="L224">            }</span>
+<span class="fc" id="L225">            keys.add(key);</span>
+<span class="fc" id="L226">        }</span>
+<span class="fc" id="L227">        return keys;</span>
+    }
+
+    /**
+     * Returns a copy of the non-expired CachedObjects in the cache as a list.
+     *
+     * @return A List of &lt;code&gt;CachedObject&lt;/code&gt; objects held in the cache
+     */
+    @Override
+    public List&lt;CachedObject&lt;?&gt;&gt; getCachedObjects()
+    {
+<span class="fc" id="L238">        final ArrayList&lt;CachedObject&lt;?&gt;&gt; objects = new ArrayList&lt;&gt;(this.cache.size());</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        for (String key : this.cache.keySet())</span>
+        {
+<span class="fc" id="L241">            CachedObject&lt;?&gt; cachedObject = null;</span>
+            try
+            {
+            	// only add non-null objects
+<span class="fc" id="L245">                cachedObject = getObject(key);</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">                if ( cachedObject != null )</span>
+                {
+<span class="fc" id="L248">                	objects.add(cachedObject);</span>
+                }
+            }
+<span class="nc" id="L251">            catch (ObjectExpiredException oee)</span>
+            {
+                // this is OK we just do not want this object
+<span class="nc" id="L254">                continue;</span>
+<span class="fc" id="L255">            }</span>
+<span class="fc" id="L256">        }</span>
+<span class="fc" id="L257">        return objects;</span>
+    }
+
+    /**
+     * Circle through the cache and remove stale objects. Frequency is
+     * determined by the cacheCheckFrequency property.
+     */
+    @Override
+    public void run()
+    {
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        while (this.continueThread)</span>
+        {
+            // Sleep for amount of time set in cacheCheckFrequency -
+            // default = 5 seconds.
+<span class="fc" id="L271">            synchronized (this)</span>
+            {
+                try
+                {
+<span class="fc" id="L275">                    wait(this.cacheCheckFrequency);</span>
+                }
+<span class="nc" id="L277">                catch (InterruptedException exc)</span>
+                {
+                    // to be expected
+<span class="fc" id="L280">                }</span>
+<span class="fc" id="L281">            }</span>
+
+<span class="fc" id="L283">            clearCache();</span>
+        }
+<span class="fc" id="L285">    }</span>
+
+    /**
+     * Iterate through the cache and remove or refresh stale objects.
+     */
+    public void clearCache()
+    {
+<span class="fc" id="L292">        List&lt;String&gt; refreshThese = new ArrayList&lt;&gt;(20);</span>
+        // Sync on this object so that other threads do not
+        // change the Hashtable while enumerating over it.
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        for (String key : this.cache.keySet())</span>
+        {
+<span class="fc" id="L297">            final CachedObject&lt;?&gt; cachedObject = this.cache.get(key);</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (cachedObject instanceof RefreshableCachedObject)</span>
+            {
+<span class="nc" id="L300">                RefreshableCachedObject&lt;?&gt; refreshableObject = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">                if (refreshableObject.isUntouched())</span>
+                {
+<span class="nc" id="L303">                    this.cache.remove(key);</span>
+                }
+<span class="nc bnc" id="L305" title="All 2 branches missed.">                else if (refreshableObject.isStale())</span>
+                {
+                    // to prolong holding the lock on this object
+<span class="nc" id="L308">                    refreshThese.add(key);</span>
+                }
+<span class="nc" id="L310">            }</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">            else if (cachedObject.isStale())</span>
+            {
+<span class="fc" id="L313">                this.cache.remove(key);</span>
+            }
+<span class="fc" id="L315">        }</span>
+
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">        for (String key : refreshThese)</span>
+        {
+<span class="nc" id="L319">            CachedObject&lt;?&gt; cachedObject = this.cache.get(key);</span>
+<span class="nc" id="L320">            RefreshableCachedObject&lt;?&gt; refreshableCachedObject = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc" id="L321">            refreshableCachedObject.refresh();</span>
+<span class="nc" id="L322">        }</span>
+<span class="fc" id="L323">    }</span>
+
+    /**
+     * Returns the number of objects currently stored in the cache
+     *
+     * @return int number of object in the cache
+     */
+    @Override
+    public int getNumberOfObjects()
+    {
+<span class="fc" id="L333">        return this.cache.size();</span>
+    }
+
+    /**
+     * Returns the current size of the cache.
+     *
+     * @return int representing current cache size in number of bytes
+     */
+    @Override
+    public int getCacheSize() throws IOException
+    {
+<span class="nc" id="L344">        final ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L345">        final ObjectOutputStream out = new ObjectOutputStream(baos);</span>
+<span class="nc" id="L346">        out.writeObject(this.cache);</span>
+<span class="nc" id="L347">        out.flush();</span>
+        //
+        // Subtract 4 bytes from the length, because the serialization
+        // magic number (2 bytes) and version number (2 bytes) are
+        // both written to the stream before the object
+        //
+<span class="nc" id="L353">        return baos.toByteArray().length - 4;</span>
+    }
+
+    /**
+     * Flush the cache of all objects.
+     */
+    @Override
+    public void flushCache()
+    {
+<span class="fc" id="L362">        this.cache.clear();</span>
+<span class="fc" id="L363">    }</span>
+
+    // ---------------- Avalon Lifecycle Methods ---------------------
+    /**
+     * Avalon component lifecycle method
+     */
+    @Override
+    public void configure(Configuration conf) throws ConfigurationException
+    {
+<span class="fc" id="L372">        this.cacheCheckFrequency = conf.getAttributeAsLong(</span>
+                CACHE_CHECK_FREQUENCY, DEFAULT_CACHE_CHECK_FREQUENCY);
+<span class="fc" id="L374">        this.cacheInitialSize = conf.getAttributeAsInteger(INITIAL_CACHE_SIZE,</span>
+                DEFAULT_INITIAL_CACHE_SIZE);
+<span class="fc" id="L376">    }</span>
+
+    /**
+     * Avalon component lifecycle method
+     */
+    @Override
+    public void initialize() throws Exception
+    {
+<span class="fc" id="L384">        this.cache = new ConcurrentHashMap&lt;&gt;(this.cacheInitialSize);</span>
+        // Start housekeeping thread.
+<span class="fc" id="L386">        this.continueThread = true;</span>
+<span class="fc" id="L387">        this.houseKeepingThread = new Thread(this);</span>
+        // Indicate that this is a system thread. JVM will quit only when
+        // there are no more active user threads. Settings threads spawned
+        // internally by Turbine as daemons allows commandline applications
+        // using Turbine to terminate in an orderly manner.
+<span class="fc" id="L392">        this.houseKeepingThread.setDaemon(true);</span>
+<span class="fc" id="L393">        this.houseKeepingThread.start();</span>
+<span class="fc" id="L394">    }</span>
+
+    /**
+     * Avalon component lifecycle method
+     */
+    @Override
+    public void dispose()
+    {
+<span class="fc" id="L402">        synchronized (this)</span>
+        {
+<span class="fc" id="L404">            this.continueThread = false;</span>
+<span class="fc" id="L405">            notifyAll();</span>
+<span class="fc" id="L406">        }</span>
+<span class="fc" id="L407">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html lang="de">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<main role="main">
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a id="line.1">package org.apache.fulcrum.cache;</a>
+<span class="sourceLineNo">002</span><a id="line.2"></a>
+<span class="sourceLineNo">003</span><a id="line.3">/*</a>
+<span class="sourceLineNo">004</span><a id="line.4"> * Licensed to the Apache Software Foundation (ASF) under one</a>
+<span class="sourceLineNo">005</span><a id="line.5"> * or more contributor license agreements.  See the NOTICE file</a>
+<span class="sourceLineNo">006</span><a id="line.6"> * distributed with this work for additional information</a>
+<span class="sourceLineNo">007</span><a id="line.7"> * regarding copyright ownership.  The ASF licenses this file</a>
+<span class="sourceLineNo">008</span><a id="line.8"> * to you under the Apache License, Version 2.0 (the</a>
+<span class="sourceLineNo">009</span><a id="line.9"> * "License"); you may not use this file except in compliance</a>
+<span class="sourceLineNo">010</span><a id="line.10"> * with the License.  You may obtain a copy of the License at</a>
+<span class="sourceLineNo">011</span><a id="line.11"> *</a>
+<span class="sourceLineNo">012</span><a id="line.12"> *   http://www.apache.org/licenses/LICENSE-2.0</a>
+<span class="sourceLineNo">013</span><a id="line.13"> *</a>
+<span class="sourceLineNo">014</span><a id="line.14"> * Unless required by applicable law or agreed to in writing,</a>
+<span class="sourceLineNo">015</span><a id="line.15"> * software distributed under the License is distributed on an</a>
+<span class="sourceLineNo">016</span><a id="line.16"> * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY</a>
+<span class="sourceLineNo">017</span><a id="line.17"> * KIND, either express or implied.  See the License for the</a>
+<span class="sourceLineNo">018</span><a id="line.18"> * specific language governing permissions and limitations</a>
+<span class="sourceLineNo">019</span><a id="line.19"> * under the License.</a>
+<span class="sourceLineNo">020</span><a id="line.20"> */</a>
+<span class="sourceLineNo">021</span><a id="line.21"></a>
+<span class="sourceLineNo">022</span><a id="line.22">/**</a>
+<span class="sourceLineNo">023</span><a id="line.23"> * The idea of the RefreshableCachedObject is that, rather than removing items</a>
+<span class="sourceLineNo">024</span><a id="line.24"> * from the cache when they become stale, we'll tell them to refresh themselves</a>
+<span class="sourceLineNo">025</span><a id="line.25"> * instead. That way they'll always be in the cache, and the code to refresh</a>
+<span class="sourceLineNo">026</span><a id="line.26"> * them will be run by the background thread rather than by a user request</a>
+<span class="sourceLineNo">027</span><a id="line.27"> * thread. You can also set a TTL (Time To Live) for the object. This way, if</a>
+<span class="sourceLineNo">028</span><a id="line.28"> * the object hasn't been touched for the TTL period, then it will be removed</a>
+<span class="sourceLineNo">029</span><a id="line.29"> * from the cache.</a>
+<span class="sourceLineNo">030</span><a id="line.30"> *</a>
+<span class="sourceLineNo">031</span><a id="line.31"> * This extends CachedObject and provides a method for refreshing the cached</a>
+<span class="sourceLineNo">032</span><a id="line.32"> * object, and resetting its expire time.</a>
+<span class="sourceLineNo">033</span><a id="line.33"> *</a>
+<span class="sourceLineNo">034</span><a id="line.34"> * @author &lt;a href="mailto:nissim@nksystems.com"&gt;Nissim Karpenstein&lt;/a&gt;</a>
+<span class="sourceLineNo">035</span><a id="line.35"> * @author &lt;a href="mailto:hps@intermeta.de"&gt;Henning P. Schmiedehausen&lt;/a&gt;</a>
+<span class="sourceLineNo">036</span><a id="line.36"> * @version $Id$</a>
+<span class="sourceLineNo">037</span><a id="line.37"> */</a>
+<span class="sourceLineNo">038</span><a id="line.38">public class RefreshableCachedObject&lt;T extends Refreshable&gt; extends CachedObject&lt;T&gt;</a>
+<span class="sourceLineNo">039</span><a id="line.39">{</a>
+<span class="sourceLineNo">040</span><a id="line.40"></a>
+<span class="sourceLineNo">041</span><a id="line.41">    /**</a>
+<span class="sourceLineNo">042</span><a id="line.42">     * Serialization key</a>
+<span class="sourceLineNo">043</span><a id="line.43">     */</a>
+<span class="sourceLineNo">044</span><a id="line.44">    private static final long serialVersionUID = 4072572956381768087L;</a>
+<span class="sourceLineNo">045</span><a id="line.45"></a>
+<span class="sourceLineNo">046</span><a id="line.46">    /**</a>
+<span class="sourceLineNo">047</span><a id="line.47">     * How long to wait before removing an untouched object from the cache.</a>
+<span class="sourceLineNo">048</span><a id="line.48">     * Negative numbers mean never remove (the default).</a>
+<span class="sourceLineNo">049</span><a id="line.49">     * </a>
+<span class="sourceLineNo">050</span><a id="line.50">     * time to live in millisec, getter/setter ({@link #getTTL()}</a>
+<span class="sourceLineNo">051</span><a id="line.51">     * </a>
+<span class="sourceLineNo">052</span><a id="line.52">     */</a>
+<span class="sourceLineNo">053</span><a id="line.53">    private long timeToLive = -1;</a>
+<span class="sourceLineNo">054</span><a id="line.54"></a>
+<span class="sourceLineNo">055</span><a id="line.55">    /**</a>
+<span class="sourceLineNo">056</span><a id="line.56">     * The last time the Object was accessed from the cache.</a>
+<span class="sourceLineNo">057</span><a id="line.57">     */</a>
+<span class="sourceLineNo">058</span><a id="line.58">    private long lastAccess;</a>
+<span class="sourceLineNo">059</span><a id="line.59"></a>
+<span class="sourceLineNo">060</span><a id="line.60">    /**</a>
+<span class="sourceLineNo">061</span><a id="line.61">     * Constructor; sets the object to expire in the default time (30 minutes).</a>
+<span class="sourceLineNo">062</span><a id="line.62">     *</a>
+<span class="sourceLineNo">063</span><a id="line.63">     * @param object</a>
+<span class="sourceLineNo">064</span><a id="line.64">     *            The object you want to cache.</a>
+<span class="sourceLineNo">065</span><a id="line.65">     */</a>
+<span class="sourceLineNo">066</span><a id="line.66">    public RefreshableCachedObject(final T object)</a>
+<span class="sourceLineNo">067</span><a id="line.67">    {</a>
+<span class="sourceLineNo">068</span><a id="line.68">        super(object);</a>
+<span class="sourceLineNo">069</span><a id="line.69">        setLastAccess(System.currentTimeMillis());</a>
+<span class="sourceLineNo">070</span><a id="line.70">    }</a>
+<span class="sourceLineNo">071</span><a id="line.71"></a>
+<span class="sourceLineNo">072</span><a id="line.72">    /**</a>
+<span class="sourceLineNo">073</span><a id="line.73">     * Constructor.</a>
+<span class="sourceLineNo">074</span><a id="line.74">     *</a>
+<span class="sourceLineNo">075</span><a id="line.75">     * @param object</a>
+<span class="sourceLineNo">076</span><a id="line.76">     *            The object to cache.</a>
+<span class="sourceLineNo">077</span><a id="line.77">     * @param expires</a>
+<span class="sourceLineNo">078</span><a id="line.78">     *            How long before the object expires, in ms, e.g. 1000 = 1</a>
+<span class="sourceLineNo">079</span><a id="line.79">     *            second.</a>
+<span class="sourceLineNo">080</span><a id="line.80">     */</a>
+<span class="sourceLineNo">081</span><a id="line.81">    public RefreshableCachedObject(final T object, final long expires)</a>
+<span class="sourceLineNo">082</span><a id="line.82">    {</a>
+<span class="sourceLineNo">083</span><a id="line.83">        super(object, expires);</a>
+<span class="sourceLineNo">084</span><a id="line.84">        setLastAccess(System.currentTimeMillis());</a>
+<span class="sourceLineNo">085</span><a id="line.85">    }</a>
+<span class="sourceLineNo">086</span><a id="line.86"></a>
+<span class="sourceLineNo">087</span><a id="line.87">    /**</a>
+<span class="sourceLineNo">088</span><a id="line.88">     * Sets the timeToLive value</a>
+<span class="sourceLineNo">089</span><a id="line.89">     *</a>
+<span class="sourceLineNo">090</span><a id="line.90">     * @param timeToLive</a>
+<span class="sourceLineNo">091</span><a id="line.91">     *            the new Value in milliseconds</a>
+<span class="sourceLineNo">092</span><a id="line.92">     */</a>
+<span class="sourceLineNo">093</span><a id="line.93">    public void setTTL(final long timeToLive)</a>
+<span class="sourceLineNo">094</span><a id="line.94">    {</a>
+<span class="sourceLineNo">095</span><a id="line.95">        synchronized(this) {</a>
+<span class="sourceLineNo">096</span><a id="line.96">            this.timeToLive = timeToLive;</a>
+<span class="sourceLineNo">097</span><a id="line.97">        }</a>
+<span class="sourceLineNo">098</span><a id="line.98">    }</a>
+<span class="sourceLineNo">099</span><a id="line.99"></a>
+<span class="sourceLineNo">100</span><a id="line.100">    /**</a>
+<span class="sourceLineNo">101</span><a id="line.101">     * Gets the timeToLive value.</a>
+<span class="sourceLineNo">102</span><a id="line.102">     *</a>
+<span class="sourceLineNo">103</span><a id="line.103">     * @return The current timeToLive value (in milliseconds)</a>
+<span class="sourceLineNo">104</span><a id="line.104">     */</a>
+<span class="sourceLineNo">105</span><a id="line.105">    public long getTTL()</a>
+<span class="sourceLineNo">106</span><a id="line.106">    {</a>
+<span class="sourceLineNo">107</span><a id="line.107">        synchronized(this) {</a>
+<span class="sourceLineNo">108</span><a id="line.108">            return this.timeToLive;</a>
+<span class="sourceLineNo">109</span><a id="line.109">        }</a>
+<span class="sourceLineNo">110</span><a id="line.110">    }</a>
+<span class="sourceLineNo">111</span><a id="line.111"></a>
+<span class="sourceLineNo">112</span><a id="line.112">    /**</a>
+<span class="sourceLineNo">113</span><a id="line.113">     * Sets the last access time to the current time.</a>
+<span class="sourceLineNo">114</span><a id="line.114">     */</a>
+<span class="sourceLineNo">115</span><a id="line.115">    public void touch()</a>
+<span class="sourceLineNo">116</span><a id="line.116">    {</a>
+<span class="sourceLineNo">117</span><a id="line.117">        synchronized(this) {</a>
+<span class="sourceLineNo">118</span><a id="line.118">            this.lastAccess = System.currentTimeMillis();</a>
+<span class="sourceLineNo">119</span><a id="line.119">        }</a>
+<span class="sourceLineNo">120</span><a id="line.120">    }</a>
+<span class="sourceLineNo">121</span><a id="line.121"></a>
+<span class="sourceLineNo">122</span><a id="line.122">    /**</a>
+<span class="sourceLineNo">123</span><a id="line.123">     * Returns true if the object hasn't been touched in the previous TTL</a>
+<span class="sourceLineNo">124</span><a id="line.124">     * period.</a>
+<span class="sourceLineNo">125</span><a id="line.125">     * </a>
+<span class="sourceLineNo">126</span><a id="line.126">     * @return boolean status of object</a>
+<span class="sourceLineNo">127</span><a id="line.127">     */</a>
+<span class="sourceLineNo">128</span><a id="line.128">    public boolean isUntouched()</a>
+<span class="sourceLineNo">129</span><a id="line.129">    {</a>
+<span class="sourceLineNo">130</span><a id="line.130">        boolean untouched = false;</a>
+<span class="sourceLineNo">131</span><a id="line.131">        synchronized(this) {</a>
+<span class="sourceLineNo">132</span><a id="line.132">            if (this.lastAccess + this.timeToLive &lt; System.currentTimeMillis())</a>
+<span class="sourceLineNo">133</span><a id="line.133">            {</a>
+<span class="sourceLineNo">134</span><a id="line.134">                untouched = true;</a>
+<span class="sourceLineNo">135</span><a id="line.135">            }</a>
+<span class="sourceLineNo">136</span><a id="line.136">            return untouched;</a>
+<span class="sourceLineNo">137</span><a id="line.137">        }</a>
+<span class="sourceLineNo">138</span><a id="line.138">    }</a>
+<span class="sourceLineNo">139</span><a id="line.139"></a>
+<span class="sourceLineNo">140</span><a id="line.140">    /**</a>
+<span class="sourceLineNo">141</span><a id="line.141">     * Refresh the object and the created time.</a>
+<span class="sourceLineNo">142</span><a id="line.142">     */</a>
+<span class="sourceLineNo">143</span><a id="line.143">    public void refresh()</a>
+<span class="sourceLineNo">144</span><a id="line.144">    {</a>
+<span class="sourceLineNo">145</span><a id="line.145">        final Refreshable refreshable = getContents();</a>
+<span class="sourceLineNo">146</span><a id="line.146">        synchronized (this)</a>
+<span class="sourceLineNo">147</span><a id="line.147">        {</a>
+<span class="sourceLineNo">148</span><a id="line.148">            this.created = System.currentTimeMillis();</a>
+<span class="sourceLineNo">149</span><a id="line.149">            refreshable.refresh();</a>
+<span class="sourceLineNo">150</span><a id="line.150">        }</a>
+<span class="sourceLineNo">151</span><a id="line.151">    }</a>
+<span class="sourceLineNo">152</span><a id="line.152"></a>
+<span class="sourceLineNo">153</span><a id="line.153">    public long getLastAccess()</a>
+<span class="sourceLineNo">154</span><a id="line.154">    {</a>
+<span class="sourceLineNo">155</span><a id="line.155">        return lastAccess;</a>
+<span class="sourceLineNo">156</span><a id="line.156">    }</a>
+<span class="sourceLineNo">157</span><a id="line.157"></a>
+<span class="sourceLineNo">158</span><a id="line.158">    public void setLastAccess(long lastAccess)</a>
+<span class="sourceLineNo">159</span><a id="line.159">    {</a>
+<span class="sourceLineNo">160</span><a id="line.160">        this.lastAccess = lastAccess;</a>
+<span class="sourceLineNo">161</span><a id="line.161">    }</a>
+<span class="sourceLineNo">162</span><a id="line.162">}</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</main>
+</body>
+</html>

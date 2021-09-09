@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CachedObject.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fulcrum Cache</a> &gt; <a href="index.source.html" class="el_package">org.apache.fulcrum.cache</a> &gt; <span class="el_source">CachedObject.java</span></div><h1>CachedObject.java</h1><pre class="source lang-java linenums">package org.apache.fulcrum.cache;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * Wrapper for an object you want to store in a cache for a period of time.
+ *
+ * @author &lt;a href=&quot;mailto:mbryson@mont.mindspring.com&quot;&gt;Dave Bryson&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:hps@intermeta.de&quot;&gt;Henning P. Schmiedehausen&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:epugh@upstate.com&quot;&gt;Eric Pugh&lt;/a&gt;
+ * @version $Id$
+ */
+
+public class CachedObject&lt;T&gt; implements Serializable
+{
+    /*
+     * TODO: The old Turbine version you could set the default age from Turbine.
+     * What we need is a CachedObjectFactory that would generate CachedObject's
+     * that could then have their default age set.
+     */
+
+    /**
+     * Serialization key
+     */
+    private static final long serialVersionUID = -9107764093769042092L;
+
+    /** Cache the object with the Default TTL */
+    public static final int DEFAULT = 0;
+
+    /** Do not expire the object */
+    public static final int FOREVER = -1;
+
+    /** The object to be cached. */
+<span class="fc" id="L54">    private T contents = null;</span>
+
+    /** Default age (30 minutes). */
+    private static final long DEFAULT_AGE = 1_800_000;
+
+    /** When the object is created. */
+    protected long created;
+
+    /** When the object should expire. */
+    private long expires;
+
+    /** Is this object stale/expired? */
+<span class="fc" id="L66">    private final AtomicBoolean stale = new AtomicBoolean();</span>
+
+    /**
+     * Constructor; sets the object to expire in the default time (30 minutes).
+     *
+     * @param object
+     *            The object you want to cache.
+     */
+    public CachedObject(final T object)
+    {
+<span class="fc" id="L76">        this(object, DEFAULT);</span>
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * Constructor.
+     *
+     * @param object
+     *            The object to cache.
+     * @param expires
+     *            How long before the object expires, in ms, e.g. 1000 = 1
+     *            second.
+     */
+    public CachedObject(final T object, final long expires)
+<span class="fc" id="L89">    {</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (expires == DEFAULT)</span>
+        {
+<span class="fc" id="L92">            this.expires = this.DEFAULT_AGE;</span>
+        } else {
+<span class="fc" id="L94">            this.expires = expires;</span>
+        }
+
+<span class="fc" id="L97">        this.contents = object;</span>
+
+<span class="fc" id="L99">        this.created = System.currentTimeMillis();</span>
+<span class="fc" id="L100">    }</span>
+
+    /**
+     * Returns the cached object.
+     *
+     * @return The cached object.
+     */
+    public T getContents()
+    {
+<span class="fc" id="L109">        return this.contents;</span>
+    }
+
+    /**
+     * Returns the creation time for the object.
+     *
+     * @return When the object was created.
+     */
+    public long getCreated()
+    {
+<span class="nc" id="L119">        return this.created;</span>
+    }
+
+    /**
+     * Returns the expiration time for the object.
+     *
+     * @return When the object expires.
+     */
+    public long getExpires()
+    {
+<span class="fc" id="L129">        return this.expires;</span>
+    }
+
+    /**
+     * Set the expiration interval for the object.
+     *
+     * @param expires
+     *            Expiration interval in millis ( 1 second = 1000 millis)
+     */
+    public void setExpires(final long expires)
+    {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        if (expires == DEFAULT)</span>
+        {
+<span class="nc" id="L142">            this.expires = this.DEFAULT_AGE;</span>
+        }
+        else
+        {
+<span class="nc" id="L146">            this.expires = expires;</span>
+        }
+<span class="nc bnc" id="L148" title="All 2 branches missed.">        if (expires == FOREVER)</span>
+        {
+<span class="nc" id="L150">            setStale(false);</span>
+        }
+        else
+        {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            setStale((System.currentTimeMillis() - this.created) &gt; expires);</span>
+        }
+<span class="nc" id="L156">    }</span>
+
+    /**
+     * Set the stale status for the object.
+     *
+     * @param stale
+     *            Whether the object is stale or not.
+     */
+    public void setStale(final boolean stale)
+    {
+<span class="fc" id="L166">        this.stale.set( stale );</span>
+<span class="fc" id="L167">    }</span>
+    
+
+    /**
+     * Is the object stale?
+     *
+     * @return True if the object is stale.
+     */
+    public boolean isStale()
+    {
+<span class="fc" id="L177">    	boolean currentState = false;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">        if (this.expires != FOREVER)</span>
+        {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        	setStale((System.currentTimeMillis() - this.created) &gt; this.expires);</span>
+<span class="fc" id="L181">        	currentState = this.stale.get();</span>
+        }
+<span class="fc" id="L183">        return currentState;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,8 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Fulcrum Cache,org.apache.fulcrum.cache.impl,DefaultGlobalCacheService,87,244,13,21,29,67,10,22,1,14
+Fulcrum Cache,org.apache.fulcrum.cache.impl,EHCacheService,81,229,19,15,25,64,15,15,1,12
+Fulcrum Cache,org.apache.fulcrum.cache.impl,JCSCacheService,139,286,21,21,33,75,16,19,1,13
+Fulcrum Cache,org.apache.fulcrum.cache,RefreshableCachedObject,96,0,2,0,31,0,10,0,9,0
+Fulcrum Cache,org.apache.fulcrum.cache,CachedObject,37,72,7,5,8,20,6,8,2,6
+Fulcrum Cache,org.apache.fulcrum.cache,GlobalCacheService,0,4,0,0,0,1,0,1,0,1
+Fulcrum Cache,org.apache.fulcrum.cache,ObjectExpiredException,0,3,0,0,0,1,0,1,0,1

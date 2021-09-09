@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RefreshableCachedObject.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fulcrum Cache</a> &gt; <a href="index.source.html" class="el_package">org.apache.fulcrum.cache</a> &gt; <span class="el_source">RefreshableCachedObject.java</span></div><h1>RefreshableCachedObject.java</h1><pre class="source lang-java linenums">package org.apache.fulcrum.cache;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * The idea of the RefreshableCachedObject is that, rather than removing items
+ * from the cache when they become stale, we'll tell them to refresh themselves
+ * instead. That way they'll always be in the cache, and the code to refresh
+ * them will be run by the background thread rather than by a user request
+ * thread. You can also set a TTL (Time To Live) for the object. This way, if
+ * the object hasn't been touched for the TTL period, then it will be removed
+ * from the cache.
+ *
+ * This extends CachedObject and provides a method for refreshing the cached
+ * object, and resetting its expire time.
+ *
+ * @author &lt;a href=&quot;mailto:nissim@nksystems.com&quot;&gt;Nissim Karpenstein&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:hps@intermeta.de&quot;&gt;Henning P. Schmiedehausen&lt;/a&gt;
+ * @version $Id$
+ */
+public class RefreshableCachedObject&lt;T extends Refreshable&gt; extends CachedObject&lt;T&gt;
+{
+
+    /**
+     * Serialization key
+     */
+    private static final long serialVersionUID = 4072572956381768087L;
+
+    /**
+     * How long to wait before removing an untouched object from the cache.
+     * Negative numbers mean never remove (the default).
+     * 
+     * time to live in millisec, getter/setter ({@link #getTTL()}
+     * 
+     */
+<span class="nc" id="L53">    private long timeToLive = -1;</span>
+
+    /**
+     * The last time the Object was accessed from the cache.
+     */
+    private long lastAccess;
+
+    /**
+     * Constructor; sets the object to expire in the default time (30 minutes).
+     *
+     * @param object
+     *            The object you want to cache.
+     */
+    public RefreshableCachedObject(final T object)
+    {
+<span class="nc" id="L68">        super(object);</span>
+<span class="nc" id="L69">        setLastAccess(System.currentTimeMillis());</span>
+<span class="nc" id="L70">    }</span>
+
+    /**
+     * Constructor.
+     *
+     * @param object
+     *            The object to cache.
+     * @param expires
+     *            How long before the object expires, in ms, e.g. 1000 = 1
+     *            second.
+     */
+    public RefreshableCachedObject(final T object, final long expires)
+    {
+<span class="nc" id="L83">        super(object, expires);</span>
+<span class="nc" id="L84">        setLastAccess(System.currentTimeMillis());</span>
+<span class="nc" id="L85">    }</span>
+
+    /**
+     * Sets the timeToLive value
+     *
+     * @param timeToLive
+     *            the new Value in milliseconds
+     */
+    public void setTTL(final long timeToLive)
+    {
+<span class="nc" id="L95">        synchronized(this) {</span>
+<span class="nc" id="L96">            this.timeToLive = timeToLive;</span>
+<span class="nc" id="L97">        }</span>
+<span class="nc" id="L98">    }</span>
+
+    /**
+     * Gets the timeToLive value.
+     *
+     * @return The current timeToLive value (in milliseconds)
+     */
+    public long getTTL()
+    {
+<span class="nc" id="L107">        synchronized(this) {</span>
+<span class="nc" id="L108">            return this.timeToLive;</span>
+        }
+    }
+
+    /**
+     * Sets the last access time to the current time.
+     */
+    public void touch()
+    {
+<span class="nc" id="L117">        synchronized(this) {</span>
+<span class="nc" id="L118">            this.lastAccess = System.currentTimeMillis();</span>
+<span class="nc" id="L119">        }</span>
+<span class="nc" id="L120">    }</span>
+
+    /**
+     * Returns true if the object hasn't been touched in the previous TTL
+     * period.
+     * 
+     * @return boolean status of object
+     */
+    public boolean isUntouched()
+    {
+<span class="nc" id="L130">        boolean untouched = false;</span>
+<span class="nc" id="L131">        synchronized(this) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (this.lastAccess + this.timeToLive &lt; System.currentTimeMillis())</span>
+            {
+<span class="nc" id="L134">            	untouched = true;</span>
+            }
+<span class="nc" id="L136">            return untouched;</span>
+        }
+    }
+
+    /**
+     * Refresh the object and the created time.
+     */
+    public void refresh()
+    {
+<span class="nc" id="L145">        final Refreshable refreshable = getContents();</span>
+<span class="nc" id="L146">        synchronized (this)</span>
+        {
+<span class="nc" id="L148">            this.created = System.currentTimeMillis();</span>
+<span class="nc" id="L149">            refreshable.refresh();</span>
+<span class="nc" id="L150">        }</span>
+<span class="nc" id="L151">    }</span>
+
+    public long getLastAccess()
+    {
+<span class="nc" id="L155">        return lastAccess;</span>
+    }
+
+    public void setLastAccess(long lastAccess)
+    {
+<span class="nc" id="L160">        this.lastAccess = lastAccess;</span>
+<span class="nc" id="L161">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

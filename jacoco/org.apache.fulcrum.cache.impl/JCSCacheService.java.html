@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JCSCacheService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Fulcrum Cache</a> &gt; <a href="index.source.html" class="el_package">org.apache.fulcrum.cache.impl</a> &gt; <span class="el_source">JCSCacheService.java</span></div><h1>JCSCacheService.java</h1><pre class="source lang-java linenums">package org.apache.fulcrum.cache.impl;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.avalon.framework.activity.Disposable;
+import org.apache.avalon.framework.activity.Initializable;
+import org.apache.avalon.framework.configuration.Configurable;
+import org.apache.avalon.framework.configuration.Configuration;
+import org.apache.avalon.framework.configuration.ConfigurationException;
+import org.apache.avalon.framework.logger.AbstractLogEnabled;
+import org.apache.avalon.framework.thread.ThreadSafe;
+import org.apache.commons.jcs3.JCS;
+import org.apache.commons.jcs3.access.GroupCacheAccess;
+import org.apache.commons.jcs3.access.exception.CacheException;
+import org.apache.commons.jcs3.engine.ElementAttributes;
+import org.apache.commons.jcs3.engine.control.CompositeCacheManager;
+import org.apache.fulcrum.cache.CachedObject;
+import org.apache.fulcrum.cache.GlobalCacheService;
+import org.apache.fulcrum.cache.ObjectExpiredException;
+import org.apache.fulcrum.cache.RefreshableCachedObject;
+
+/**
+ * Default implementation of JCSCacheService
+ *
+ * @author &lt;a href=&quot;mailto:tv@apache.org&quot;&gt;Thomas Vandahl&lt;/a&gt;
+ * @version $Id$
+ */
+public class JCSCacheService extends AbstractLogEnabled implements
+        GlobalCacheService, Runnable, Configurable, Disposable, Initializable,
+        ThreadSafe
+{
+    /**
+     * Cache check frequency in Millis (1000 Millis = 1 second). Value must be &amp;gt;
+     * 0. Default = 5 seconds
+     */
+    public static final long DEFAULT_CACHE_CHECK_FREQUENCY = 5000; // 5 seconds
+
+    /**
+     * cacheCheckFrequency (default - 5 seconds)
+     */
+    private long cacheCheckFrequency;
+
+    /**
+     * Instance of the JCS cache
+     */
+    private GroupCacheAccess&lt;String, CachedObject&lt;?&gt;&gt; cacheManager;
+
+    /**
+     * JCS region to use
+     */
+    private String region;
+
+    /**
+     * Path name of the JCS configuration file
+     */
+    private String configFile;
+
+    /**
+     * Constant value which provides a group name
+     */
+<span class="fc" id="L86">    private static String group = &quot;default_group&quot;;</span>
+
+    /** thread for refreshing stale items in the cache */
+    private Thread refreshing;
+
+    /** flag to stop the housekeeping thread when the component is disposed. */
+    private boolean continueThread;
+    
+    public JCSCacheService()
+<span class="fc" id="L95">    {</span>
+        
+<span class="fc" id="L97">    }</span>
+
+    // ---------------- Avalon Lifecycle Methods ---------------------
+
+    /**
+     * @see org.apache.avalon.framework.configuration.Configurable#configure(org.apache.avalon.framework.configuration.Configuration)
+     */
+    @Override
+	public void configure(Configuration config) throws ConfigurationException
+    {
+<span class="fc" id="L107">        this.cacheCheckFrequency = config.getChild(&quot;cacheCheckFrequency&quot;)</span>
+<span class="fc" id="L108">                .getValueAsLong(DEFAULT_CACHE_CHECK_FREQUENCY);</span>
+<span class="fc" id="L109">        this.region = config.getChild(&quot;region&quot;).getValue(&quot;fulcrum&quot;);</span>
+<span class="fc" id="L110">        this.configFile = config.getChild(&quot;configurationFile&quot;).getValue(</span>
+                &quot;/cache.ccf&quot;);
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * @see org.apache.avalon.framework.activity.Initializable#initialize()
+     */
+    @Override
+	public void initialize() throws Exception
+    {
+<span class="fc" id="L120">        JCS.setConfigFilename(this.configFile);</span>
+<span class="fc" id="L121">        this.cacheManager = JCS.getGroupCacheInstance(this.region);</span>
+
+        // Start housekeeping thread.
+<span class="fc" id="L124">        this.continueThread = true;</span>
+<span class="fc" id="L125">        this.refreshing = new Thread(this);</span>
+
+        // Indicate that this is a system thread. JVM will quit only when
+        // there are no more active user threads. Settings threads spawned
+        // internally by Turbine as daemons allows commandline applications
+        // using Turbine to terminate in an orderly manner.
+<span class="fc" id="L131">        this.refreshing.setDaemon(true);</span>
+<span class="fc" id="L132">        this.refreshing.setName(&quot;JCSCacheService Refreshing&quot;);</span>
+<span class="fc" id="L133">        this.refreshing.start();</span>
+
+<span class="fc" id="L135">        getLogger().debug(&quot;JCSCacheService started.&quot;);</span>
+<span class="fc" id="L136">    }</span>
+
+    /**
+     * @see org.apache.avalon.framework.activity.Disposable#dispose()
+     */
+    @Override
+	public void dispose()
+    {
+<span class="fc" id="L144">        this.continueThread = false;</span>
+<span class="fc" id="L145">        this.refreshing.interrupt();</span>
+
+<span class="fc" id="L147">        this.cacheManager.dispose();</span>
+<span class="fc" id="L148">        this.cacheManager = null;</span>
+<span class="fc" id="L149">        CompositeCacheManager.getInstance().shutDown();</span>
+
+<span class="fc" id="L151">        getLogger().debug(&quot;JCSCacheService stopped.&quot;);</span>
+<span class="fc" id="L152">    }</span>
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#getObject(java.lang.String)
+     */
+    @Override
+	public &lt;T&gt; CachedObject&lt;T&gt; getObject(final String objectId) throws ObjectExpiredException
+    {
+        @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L161">        CachedObject&lt;T&gt; cachedObject = (CachedObject&lt;T&gt;)this.cacheManager.getFromGroup(objectId, group);</span>
+
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (cachedObject == null)</span>
+        {
+            // Not in the cache.
+<span class="fc" id="L166">            throw new ObjectExpiredException();</span>
+        }
+
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (cachedObject.isStale())</span>
+        {
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (cachedObject instanceof RefreshableCachedObject)</span>
+            {
+<span class="nc" id="L173">                RefreshableCachedObject&lt;?&gt; refreshableObject = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                if (refreshableObject.isUntouched())</span>
+                {
+                    // Do not refresh an object that has exceeded TimeToLive
+<span class="nc" id="L177">                    removeObject(objectId);</span>
+<span class="nc" id="L178">                    throw new ObjectExpiredException();</span>
+                }
+
+                // Refresh Object
+<span class="nc" id="L182">                refreshableObject.refresh();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">                if (refreshableObject.isStale())</span>
+                {
+                    // Object is Expired, remove it from cache.
+<span class="nc" id="L186">                    removeObject(objectId);</span>
+<span class="nc" id="L187">                    throw new ObjectExpiredException();</span>
+                }
+<span class="nc" id="L189">            }</span>
+            else
+            {
+                // Expired.
+<span class="nc" id="L193">                removeObject(objectId);</span>
+<span class="nc" id="L194">                throw new ObjectExpiredException();</span>
+            }
+        }
+
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">        if (cachedObject instanceof RefreshableCachedObject)</span>
+        {
+            // notify it that it's being accessed.
+<span class="nc" id="L201">            RefreshableCachedObject&lt;?&gt; refreshableCachedObject = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc" id="L202">            refreshableCachedObject.touch();</span>
+        }
+
+<span class="fc" id="L205">        return cachedObject;</span>
+    }
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#addObject(java.lang.String,
+     *      org.apache.fulcrum.cache.CachedObject)
+     */
+    @Override
+	public &lt;T&gt; void addObject(String objectId, CachedObject&lt;T&gt; cachedObject)
+    {
+        try
+        {
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">            if (!(cachedObject.getContents() instanceof Serializable))</span>
+            {
+<span class="nc" id="L219">                getLogger()</span>
+<span class="nc" id="L220">                        .warn(</span>
+                                &quot;Object (contents) with id [&quot;
+                                        + objectId
+                                        + &quot;] is not serializable. Expect problems with auxiliary caches: &quot; + 
+<span class="nc" id="L224">                                        cachedObject.getContents().getClass().getSimpleName());</span>
+            }
+
+<span class="fc" id="L227">            ElementAttributes attrib = (ElementAttributes) this.cacheManager.getDefaultElementAttributes();</span>
+
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">            if (cachedObject instanceof RefreshableCachedObject)</span>
+            {
+<span class="nc" id="L231">                attrib.setIsEternal(true);</span>
+            }
+            else
+            {
+<span class="fc" id="L235">                attrib.setIsEternal(false);</span>
+                // expires in millis, maxlife in seconds
+<span class="fc" id="L237">                double tmp0 = ((double) (cachedObject.getExpires() + 500)) / 1000;</span>
+<span class="fc" id="L238">                getLogger().debug( &quot;setting maxlife seconds (minimum 1sec) from expiry + 0.5s: &quot; + (int)tmp0 );</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                attrib.setMaxLife( tmp0 &gt; 0 ? (int) Math.floor( tmp0 ) : 1 );</span>
+            }
+
+<span class="fc" id="L242">            attrib.setLastAccessTimeNow();</span>
+<span class="fc" id="L243">            attrib.setCreateTime();</span>
+
+<span class="fc" id="L245">            this.cacheManager.putInGroup(objectId, group, cachedObject, attrib);</span>
+        }
+<span class="nc" id="L247">        catch (CacheException e)</span>
+        {
+<span class="nc" id="L249">            getLogger().error(&quot;Could not add object &quot; + objectId + &quot; to cache&quot;, e);</span>
+<span class="fc" id="L250">        }</span>
+<span class="fc" id="L251">    }</span>
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#removeObject(java.lang.String)
+     */
+    @Override
+	public void removeObject(String objectId)
+    {
+<span class="fc" id="L259">        this.cacheManager.removeFromGroup(objectId, group);</span>
+<span class="fc" id="L260">    }</span>
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#getKeys()
+     */
+    @Override
+	public List&lt;String&gt; getKeys()
+    {
+<span class="fc" id="L268">        ArrayList&lt;String&gt; keys = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L269">        keys.addAll(this.cacheManager.getGroupKeys(group));</span>
+<span class="fc" id="L270">        return keys;</span>
+    }
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#getCachedObjects()
+     */
+    @Override
+	public List&lt;CachedObject&lt;?&gt;&gt; getCachedObjects()
+    {
+<span class="fc" id="L279">        ArrayList&lt;CachedObject&lt;?&gt;&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">        for (String key : this.cacheManager.getGroupKeys(group))</span>
+        {
+<span class="fc" id="L282">            CachedObject&lt;?&gt; cachedObject = this.cacheManager.getFromGroup(key, group);</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">            if (cachedObject != null)</span>
+            {
+<span class="fc" id="L285">                values.add(cachedObject);</span>
+            }
+<span class="fc" id="L287">        }</span>
+
+<span class="fc" id="L289">        return values;</span>
+    }
+
+    /**
+     * Circle through the cache and refresh stale objects. Frequency is
+     * determined by the cacheCheckFrequency property.
+     */
+    @Override
+	public void run()
+    {
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        while (this.continueThread)</span>
+        {
+            // Sleep for amount of time set in cacheCheckFrequency -
+            // default = 5 seconds.
+            try
+            {
+<span class="fc" id="L305">                Thread.sleep(this.cacheCheckFrequency);</span>
+            }
+<span class="fc" id="L307">            catch (InterruptedException exc)</span>
+            {
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">                if (!this.continueThread)</span>
+                {
+<span class="fc" id="L311">                    return;</span>
+                }
+<span class="fc" id="L313">            }</span>
+
+<span class="fc bfc" id="L315" title="All 2 branches covered.">            for (String key : this.cacheManager.getGroupKeys(group))</span>
+            {
+<span class="fc" id="L317">                CachedObject&lt;?&gt; cachedObject = this.cacheManager.getFromGroup(key, group);</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">                if (cachedObject == null)</span>
+                {
+<span class="fc" id="L320">                    removeObject(key);</span>
+                }
+                else
+                {
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">                    if (cachedObject instanceof RefreshableCachedObject)</span>
+                    {
+<span class="nc" id="L326">                        RefreshableCachedObject&lt;?&gt; refreshableObject = (RefreshableCachedObject&lt;?&gt;) cachedObject;</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">                        if (refreshableObject.isUntouched())</span>
+                        {
+<span class="nc" id="L329">                            this.cacheManager.removeFromGroup(key, group);</span>
+                        }
+<span class="nc bnc" id="L331" title="All 2 branches missed.">                        else if (refreshableObject.isStale())</span>
+                        {
+<span class="nc" id="L333">                            refreshableObject.refresh();</span>
+                        }
+                    }
+                }
+<span class="fc" id="L337">            }</span>
+        }
+<span class="fc" id="L339">    }</span>
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#getCacheSize()
+     */
+    @Override
+	public int getCacheSize() throws IOException
+    {
+        // This is evil!
+<span class="nc" id="L348">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L349">        ObjectOutputStream out = new ObjectOutputStream(baos);</span>
+<span class="nc" id="L350">        Set&lt;String&gt; keys = this.cacheManager.getGroupKeys(group);</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        for (String key : keys)</span>
+        {
+<span class="nc" id="L354">            out.writeObject(this.cacheManager.getFromGroup(key, group));</span>
+<span class="nc" id="L355">        }</span>
+
+<span class="nc" id="L357">        out.flush();</span>
+
+        //
+        // Subtract 4 bytes from the length, because the serialization
+        // magic number (2 bytes) and version number (2 bytes) are
+        // both written to the stream before the object
+        //
+<span class="nc" id="L364">        return baos.toByteArray().length - 4 * keys.size();</span>
+    }
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#getNumberOfObjects()
+     */
+    @Override
+	public int getNumberOfObjects()
+    {
+<span class="fc" id="L373">        int count = 0;</span>
+
+<span class="fc bfc" id="L375" title="All 2 branches covered.">        for (String key : this.cacheManager.getGroupKeys(group))</span>
+        {
+<span class="pc bpc" id="L377" title="1 of 2 branches missed.">            if (this.cacheManager.getFromGroup(key, group) != null)</span>
+            {
+<span class="fc" id="L379">                count++;</span>
+            }
+<span class="fc" id="L381">        }</span>
+
+<span class="fc" id="L383">        return count;</span>
+    }
+
+    /**
+     * @see org.apache.fulcrum.cache.GlobalCacheService#flushCache()
+     */
+    @Override
+	public void flushCache()
+    {
+<span class="fc" id="L392">        this.cacheManager.invalidateGroup(group);</span>
+<span class="fc" id="L393">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
