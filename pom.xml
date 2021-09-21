@@ -32,12 +32,14 @@
   <description>Fulcrum Cache Service</description>
   <url>http://turbine.apache.org/fulcrum/fulcrum-cache</url>
   
-    <!-- Required for staging to work -->
-    <distributionManagement>
-        <id>apache.website</id>
-      <!-- scmPubUrl should be different for each project. If not defined scmPubUrl uses default value ${project.distributionManagement.site.url} -->
-      <url>scm:git:${turbine.scmPubUrl}</url>
-    </distributionManagement>
+  <!-- Required for staging to work -->
+  <distributionManagement>
+    <site>
+         <id>apache.org</id>
+         <!-- scmPubUrl should be different for each project. If not defined scmPubUrl uses default value ${project.distributionManagement.site.url} -->
+         <url>scm:git:${turbine.scmPubUrl}</url>
+    </site>
+  </distributionManagement>
         
   <scm>
     <connection>scm:git:https://gitbox.apache.org/repos/asf/turbine-fulcrum-cache.git</connection>
