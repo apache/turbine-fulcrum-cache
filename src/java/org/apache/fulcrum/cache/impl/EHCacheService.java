@@ -22,6 +22,8 @@ package org.apache.fulcrum.cache.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.avalon.framework.activity.Disposable;
 import org.apache.avalon.framework.activity.Initializable;
@@ -189,17 +191,12 @@ public class EHCacheService extends AbstractLogEnabled implements
     @Override
     public List<CachedObject<?>> getCachedObjects()
     {
-        ArrayList<CachedObject<?>> values = new ArrayList<CachedObject<?>>();
-
-        for (String key : getKeys())
-        {
-            Element cachedElement = this.cache.get(key);
-
-            if (cachedElement != null)
-            {
-                values.add((CachedObject<?>)cachedElement.getObjectValue());
-            }
-        }
+        ArrayList<CachedObject<?>> values =
+                getKeys().stream()
+                        .map(key -> this.cache.get(key))
+                        .filter(Objects::nonNull)
+                        .map(cachedElement -> (CachedObject<?>) cachedElement.getObjectValue())
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         return values;
     }
