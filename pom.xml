@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.turbine</groupId>
     <artifactId>turbine-parent</artifactId>
-    <version>12-SNAPSHOT</version>
+    <version>12</version>
     <relativePath />
   </parent>
 
@@ -83,7 +83,7 @@
      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>2.0.6</version>
+        <version>2.0.7</version>
         <scope>test</scope>
     </dependency>
      <!--dependency>
@@ -95,7 +95,7 @@
     <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-jcs3-core</artifactId>
-        <version>3.1</version>
+        <version>3.2</version>
     </dependency>
     <!-- log optional for jcs3, required log4j2.xml and system property -Djcs.logSystem=log4j2  -->
     <dependency>
@@ -108,13 +108,13 @@
     <dependency>
       <groupId>org.apache.fulcrum</groupId>
       <artifactId>fulcrum-testcontainer</artifactId>
-      <version>1.0.9</version>
+      <version>2.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.fulcrum</groupId>
       <artifactId>fulcrum-yaafi</artifactId>
-      <version>1.0.9-SNAPSHOT</version>
+      <version>2.0.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
