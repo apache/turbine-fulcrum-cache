@@ -264,7 +264,7 @@ public class DefaultGlobalCacheService extends AbstractLogEnabled implements
     @Override
     public void run()
     {
-        while (this.continueThread)
+        while (this.continueThread && !Thread.currentThread().isInterrupted())
         {
             // Sleep for amount of time set in cacheCheckFrequency -
             // default = 5 seconds.
