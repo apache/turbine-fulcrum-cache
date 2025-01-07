@@ -24,7 +24,15 @@
   </properties>
 
   <body>
-     <release version="2.0.1" date="in subversion">
+     <release version="2.0.1-SNAPSHOT" date="in GIT">
+         <action dev="gk" type="update">
+             Update site to 2.0.0, update to Turbine parent 13, update dependencies common-jcs-core to 3.2.1, fulcrum
+             yaafi and fulcrum-testcontainer to 2.0.1.
+         </action>
+         <action dev="gk" type="update">
+           Use lamdas in EHCacheService method getCachedObjects, add check thread isInterrupted in
+             DefaultGlobalCacheService method run
+         </action>
       </release>
     <release version="2.0.0" date="2021-06-08">
          <action dev="gk" type="update">

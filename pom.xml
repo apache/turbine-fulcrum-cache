@@ -87,11 +87,7 @@
         <version>1.7.36</version>
         <scope>test</scope>
     </dependency>
-    <!--dependency>
-        <groupId>javax.cache</groupId>
-        <artifactId>cache-api</artifactId>
-        <version>1.1.1</version>
-    </dependency-->
+
      <!--dependency>
       <groupId>org.ehcache</groupId>
       <artifactId>ehcache</artifactId>
@@ -101,7 +97,7 @@
     <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-jcs3-core</artifactId>
-        <version>3.2</version>
+        <version>3.2.1</version>
     </dependency>
     <!-- log optional for jcs3, required log4j2.xml and system property -Djcs.logSystem=log4j2  -->
     <dependency>
